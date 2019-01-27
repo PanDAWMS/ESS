@@ -1,5 +1,4 @@
 #!/bin/bash
-# Copyright European Organization for Nuclear Research (CERN)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # You may not use this file except in compliance with the License.
@@ -13,4 +12,4 @@
 CurrentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 RootDir="$( dirname "$CurrentDir" )"
 
-source ${RootDir}/.ven/bin/activate
+source ${RootDir}/.venv/bin/activate

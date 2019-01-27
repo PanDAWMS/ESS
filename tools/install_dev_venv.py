@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# Copyright European Organization for Nuclear Research (CERN)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # You may not use this file except in compliance with the License.
@@ -10,17 +9,13 @@
 # - Wen Guan, <wen.guan@cern.ch>, 2019
 
 
-import errno
-import optparse
 import os
 import subprocess
-import shutil
 import sys
-import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-PIP_REQUIRES = os.path.join(ROOT, 'tools/git', 'pip-requires')
-PIP_REQUIRES_TEST = os.path.join(ROOT, 'tools/git', 'pip-requires-test')
+PIP_REQUIRES = os.path.join(ROOT, 'tools/venv', 'pip-requires')
+PIP_REQUIRES_TEST = os.path.join(ROOT, 'tools/venv', 'pip-requires-test')
 VENV = os.path.join(ROOT, '.venv')
 
 
