@@ -1,0 +1,106 @@
+#!/usr/bin/env python
+#
+# Copyright European Organization for Nuclear Research (CERN)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Authors:
+# - Wen Guan, <wen.guan@cern.ch>, 2016
+
+import commands
+import sys
+import json
+import requests
+
+# requests.packages.urllib3.disable_warnings()
+
+project_url = "https://api.github.com/repos/wguanicedew/pilotV/pulls"
+
+def submit_merge_request(token, data):
+    r = requests.post(url='%s' % project_url,
+                      headers={"Content-Type": "application/json",
+                               "Authorization": "token %s" % token},
+                      data=json.dumps(data))
+    return r
+
+
+def update_merge_request(pull_url, token, data):
+    r = requests.post(url='%s' % pull_url,
+                      headers={"Content-Type": "application/json",
+                               "Authorization": "token %s" % token},
+                      data=json.dumps(data))
+    return r
+
+
+def update_merge_issue(pull_url, token, data):
+    print pull_url
+    print data
+    r = requests.patch(url='%s' % pull_url,
+                      headers={"Content-Type": "application/json",
+                               "Authorization": "token %s" % token},
+                      data=json.dumps(data))
+    return r
+
+
+root_git_dir = commands.getstatusoutput('git rev-parse --show-toplevel')[1]
+
+# Load private_token
+print 'Loading private token ...',
+try:
+    with open(root_git_dir + '/.githubkey', 'r') as f:
+        private_token = f.readline().strip()
+        print 'OK'
+except:
+    print 'ERROR'
+    print 'No github keyfile found at %s' % root_git_dir + '/.githubkey'
+    sys.exit(-1)
+
+
+# list pull requests:
+print 'list open pull requests ...',
+resp = requests.get(url='%s' % project_url,
+                    params={'state': 'open'})
+mr_list = json.loads(resp.text)
+for mr in mr_list:
+    print json.dumps(mr, sort_keys =True, indent = 4)
+    print mr['head']['repo']['pushed_at']
+    command = "git fetch origin pull/%s/head:%s" % (mr['number'], mr['title'])
+    print command
+    if mr['title'].endswith("_[TestOK]"):
+        print "%s already tested" % mr['number']
+        #continue
+
+    # test the pull here
+    # update the pull request status
+
+
+    pull_url = mr['statuses_url'].split("statuses")[0] + "pulls/%s" % mr['number']
+    issue_url = mr['issue_url']
+    print 'Updateing merge request ...',
+    """
+    result = update_merge_request(pull_url, token=private_token,
+                                  data={'title': '%s_[TestOK]' % mr['title'],
+                                        'body': '%s\n%s' %(mr['body'], 'test message')})
+    if result.status_code == 200 or result.status_code == 201:
+        print 'OK'
+    else:
+        print 'ERROR'
+        print result.content
+    """
+
+    resp =requests.get(url=issue_url)
+    issue = json.loads(resp.text)
+    #print json.dumps(issue, sort_keys =True, indent = 4)
+    print issue['updated_at']
+    for label in issue['labels']:
+        if label['name'] == 'Test OK':
+            continue
+    print "Updating issue"
+    result = update_merge_issue(issue_url, token=private_token,
+                                  data={
+                                        'labels': ["Test OK2"],
+                                        'body': '%s\n%s' %(mr['body'], 'test message')})
+    #print result.content

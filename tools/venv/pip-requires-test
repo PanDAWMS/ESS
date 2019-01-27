@@ -1,0 +1,6 @@
+# All dependencies needed to develop/test pilot
+
+unittest2==1.1.0 	# unit test tool
+pep8==1.7.0 		# checks for PEP8 code style compliance
+flake8==2.5.4 		# Wrapper around PyFlakes&pep8
+pytest==2.9.0		# python testing tool

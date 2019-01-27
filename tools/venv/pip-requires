@@ -1,0 +1,5 @@
+# All dependencies needed to run pilot should be defined here
+
+argparse==1.2.1
+requests==2.0.1
+urllib3==1.6
