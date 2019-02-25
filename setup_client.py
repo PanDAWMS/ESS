@@ -13,11 +13,9 @@ import glob
 import os
 import sys
 from distutils.sysconfig import get_python_lib
-from setuptools import setup, find_packages
+from setuptools import setup
 from setuptools.command.develop import develop
 from setuptools.command.install import install
-from distutils.command.install_data import install_data
-from subprocess import check_call
 
 sys.path.insert(0, os.path.abspath('lib/'))
 
