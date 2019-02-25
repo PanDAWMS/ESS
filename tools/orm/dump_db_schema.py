@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env python
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # You may not use this file except in compliance with the License.
@@ -9,8 +9,12 @@
 # - Wen Guan, <wen.guan@cern.ch>, 2019
 
 
-CurrentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-RootDir="$( dirname "$CurrentDir" )"
+"""
+dump the database schema.
+"""
 
-source ${RootDir}/.venv/bin/activate
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${RootDir}/lib/externels/mysqlclient/
+from ess.orm.utils import dump_schema
+
+if __name__ == '__main__':
+
+    dump_schema()

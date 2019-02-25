@@ -1,3 +1,2 @@
 #!/bin/bash
-python -m unittest discover -v . "test_eventservice.py"
-
+python -m unittest2 discover -v lib/ess/tests/ "test_*.py"
