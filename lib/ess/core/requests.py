@@ -15,8 +15,6 @@ operations related to Requests.
 
 import sqlalchemy
 import sqlalchemy.orm
-
-
 from sqlalchemy.exc import DatabaseError, IntegrityError
 
 from ess.common import exceptions

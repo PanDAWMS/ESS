@@ -46,8 +46,8 @@ class ResourceManager(BaseDaemon):
         Get tasks to process
         """
 
-        if self.used_space is not None:
-            self.graceful_stop.wait(1800)
+        # if self.used_space is not None:
+        #     self.graceful_stop.wait(1800)
 
         tasks = [{'name': 'resource_check'}]
 
@@ -65,10 +65,10 @@ class ResourceManager(BaseDaemon):
                     self.used_space = self.plugins['resourcechecker'].resource_check(task)
                 except Exception as error:
                     self.logger.error("Resource check plugin throws an exception: %s, %s" % (str(error), traceback.format_exc()))
-                    self.used_sapce = 0
+                    self.used_space = 0
             else:
                 self.logger.warn("No resource checker plugin. Used space will be set to 0.")
-                self.used_sapce = 0
+                self.used_space = 0
         return task
 
     def finish_tasks(self):
