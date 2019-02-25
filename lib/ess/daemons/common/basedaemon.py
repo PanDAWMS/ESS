@@ -89,6 +89,7 @@ class BaseDaemon(Process):
         Load plugin attributes
         """
         attrs = self.load_plugin_attributes(name, plugin)
+        self.logger.info("Loading plugin %s with attributes: %s" % (name, attrs))
         k = plugin.rfind('.')
         plugin_modules = plugin[:k]
         plugin_class = plugin[k + 1:]
@@ -107,6 +108,7 @@ class BaseDaemon(Process):
                 if option.startswith('plugin.'):
                     if option.count('.') == 1:
                         plugin_name = option.replace('plugin.', '').strip()
+                        self.logger.info("Loading plugin %s with %s" % (plugin_name, value))
                         self.plugins[plugin_name] = self.load_plugin(plugin_name, value)
 
     def get_tasks(self):
@@ -177,6 +179,8 @@ class BaseDaemon(Process):
 
         try:
             self.logger.info("Starting main thread")
+
+            self.load_plugins()
 
             for i in range(self.num_threads):
                 self.executors.submit(self.run_tasks, i)
