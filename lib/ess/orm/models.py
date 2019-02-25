@@ -146,9 +146,9 @@ class Edge(BASE, ModelBase):
     city = Column(String(30))
     longitude = Column(String(25))
     latitude = Column(String(25))
-    total_space = Column(BigInteger)
-    used_space = Column(BigInteger)
-    reserved_space = Column(BigInteger)
+    total_space = Column(BigInteger, default=0)
+    used_space = Column(BigInteger, default=0)
+    reserved_space = Column(BigInteger, default=0)
     num_files = Column(BigInteger)
     _table_args = (PrimaryKeyConstraint('edge_id', name='ESS_EDGES_PK'),
                    UniqueConstraint('edge_name', name='ESS_EDGES_EDGENAME_UQ'),
