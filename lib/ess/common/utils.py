@@ -88,3 +88,24 @@ def run_process(cmd, stdout=None, stderr=None):
     else:
         process = subprocess.Popen(cmd, shell=True)
     return process
+
+
+def get_space_from_string(space_str):
+    """
+    Convert space with P, T, G, M to int
+    """
+    M = 1024
+    G = 1024 * M
+    T = 1024 * G
+    P = 1024 * T
+
+    if 'M' in space_str:
+        return int(float(space_str.split('M')[0]) * M)
+    elif 'G' in space_str:
+        return int(float(space_str.split('G')[0]) * G)
+    elif 'T' in space_str:
+        return int(float(space_str.split('T')[0]) * T)
+    elif 'P' in space_str:
+        return int(float(space_str.split('P')[0]) * P)
+    else:
+        return int(space_str)

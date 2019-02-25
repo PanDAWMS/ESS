@@ -104,7 +104,7 @@ def config_get_bool(section, option):
     return __CONFIG.getboolean(section, option)
 
 
-__CONFIG = ConfigParser.SafeConfigParser(os.environ)
+__CONFIG = ConfigParser.SafeConfigParser()
 
 __HAS_CONFIG = False
 if os.environ.get('ESS_CONFIG', None):
