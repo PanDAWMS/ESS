@@ -94,5 +94,5 @@ class ResourceManager(BaseDaemon):
 
 
 if __name__ == '__main__':
-    daemon = BaseDaemon()
+    daemon = ResourceManager()
     daemon.run()
