@@ -1,0 +1,3 @@
+# ESS REST
+WSGIScriptAlias /edges               {python_site_packages_path}/ess/rest/v1/edges.py
+WSGIScriptAlias /requests               {python_site_packages_path}/ess/rest/v1/requests.py
