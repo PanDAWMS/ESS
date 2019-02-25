@@ -18,13 +18,46 @@ configuration file looking for path:
 """
 
 
-import logging
 import os
 
 try:
     import ConfigParser
 except ImportError:
     import configparser as ConfigParser
+
+
+def config_has_section(section):
+    """
+    Return where there is a section
+
+    :param section: the named section.
+.
+    :returns: True/False.
+    """
+    return __CONFIG.has_section(section)
+
+
+def config_has_option(section, option):
+    """
+    Return where there is an option for a given option in a section
+
+    :param section: the named section.
+    :param option: the named option.
+.
+    :returns: True/False.
+    """
+    return __CONFIG.has_option(section, option)
+
+
+def config_list_options(section):
+    """
+    Return list of (name, value) for a given option in a section
+
+    :param section: the named section.
+.
+    :returns: list of (name, value).
+    """
+    return __CONFIG.items(section)
 
 
 def config_get(section, option):
@@ -60,7 +93,7 @@ def config_get_float(section, option):
     return __CONFIG.getfloat(section, option)
 
 
-def config_get_bool(section, option, raise_exception=True, default=None):
+def config_get_bool(section, option):
     """
     Return the boolean value for a given option in a section
     :param section: the named section.
@@ -81,14 +114,14 @@ if os.environ.get('ESS_CONFIG', None):
                         'but could not load configurations from it.')
     __HAS_CONFIG = True
 else:
-    configfiles = ['%s/etc/ess/ess.cfg' % os.environ['ESS_HOME'],
+    configfiles = ['%s/etc/ess/ess.cfg' % os.environ.get('ESS_HOME', ''),
                    '/etc/ess/ess.cfg',
-                   '%s/etc/ess/ess.cfg' % os.environ['VIRTUAL_ENV']]
+                   '%s/etc/ess/ess.cfg' % os.environ.get('VIRTUAL_ENV', '')]
 
     for configfile in configfiles:
         if __CONFIG.read(configfile) == [configfile]:
             __HAS_CONFIG = True
-            logging.info("Configuration file %s is used" % configfile)
+            # print("Configuration file %s is used" % configfile)
             break
 
 if not __HAS_CONFIG:
