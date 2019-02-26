@@ -22,3 +22,15 @@
 
 # config files
 etc/*.cfg
+etc/*.conf
+etc/ess/*.cfg
+etc/ess/*.conf
+etc/ess/*.conf.temp
+etc/ess/rest/*.cfg
+etc/ess/rest/*.conf
+etc/ess/rest/*.conf.temp
+etc/ess/rest/gacl
+
+# compile files
+*egg*
+*build*
