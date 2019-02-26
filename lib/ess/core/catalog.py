@@ -379,10 +379,14 @@ def add_contents(collection_scope, collection_name, edge_name, files, session=No
     edge_id = get_edge_id(edge_name=edge_name, session=session)
 
     for file in files:
-        add_content(scope=file['scope'], name=file['name'], min_id=file['min_id'],
-                    max_id=file['max_id'], coll_id=coll_id, content_type=file['content_type'],
-                    status=file['status'], priority=file['priority'], edge_id=edge_id,
-                    pnf_size=file['pnf_size'], pfn=file['pfn'], session=None)
+        try:
+            add_content(scope=file['scope'], name=file['name'], min_id=file['min_id'],
+                        max_id=file['max_id'], coll_id=coll_id, content_type=file['content_type'],
+                        status=file['status'], priority=file['priority'], edge_id=edge_id,
+                        pfn_size=file['pfn_size'], pfn=file['pfn'], object_metadata=file['object_metadata'],
+                        session=None)
+        except exceptions.DuplicatedObject:
+            pass
 
 
 @transactional_session
