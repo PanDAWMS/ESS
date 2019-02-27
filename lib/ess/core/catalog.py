@@ -383,7 +383,9 @@ def add_contents(collection_scope, collection_name, edge_name, files, session=No
             add_content(scope=file['scope'], name=file['name'], min_id=file['min_id'],
                         max_id=file['max_id'], coll_id=coll_id, content_type=file['content_type'],
                         status=file['status'], priority=file['priority'], edge_id=edge_id,
-                        pfn_size=file['pfn_size'], pfn=file['pfn'], object_metadata=file['object_metadata'],
+                        pfn_size=file['pfn_size'] if 'pfn_size' in file else 0,
+                        pfn=file['pfn'] if 'pfn' in file else None,
+                        object_metadata=file['object_metadata'] if 'object_metadata' in file else None,
                         session=None)
         except exceptions.DuplicatedObject:
             pass
@@ -449,6 +451,32 @@ def update_contents(files, session=None):
             update_content(cope=file.scope, name=file.name, min_id=file.min_id, max_id=file.max_id, edge_id=file.edge_id,
                            content_id=file.content_id,
                            parameters=parameters, session=session)
+    except DatabaseError as error:
+        raise exceptions.DatabaseException(error.args)
+
+
+@transactional_session
+def update_contents_by_id(files, session=None):
+    """
+    update a collection content.
+
+    :param files: The list of content files.
+    :param session: The database session in use.
+
+    :raises NoObject: If no content is founded.
+    :raises DatabaseException: If there is a database error.
+    """
+
+    try:
+        for id in files:
+            parameters = files[id]
+
+            if 'status' in parameters and \
+               (isinstance(parameters['status'], str) or isinstance(parameters['status'], unicode)):
+                parameters['status'] = ContentStatus.from_sym(str(parameters['status']))
+
+            session.query(models.CollectionContent).filter_by(content_id=id).update(parameters)
+
     except DatabaseError as error:
         raise exceptions.DatabaseException(error.args)
 
@@ -541,13 +569,14 @@ def get_content_best_match(scope, name, min_id=None, max_id=None, edge_name=None
 
 
 @read_session
-def get_contents_by_edge_status(edge_name, edge_id=None, status=None, session=None):
+def get_contents_by_edge(edge_name, edge_id=None, status=None, coll_id=None, content_type=ContentType.FILE, session=None):
     """
     Get a collection content or raise a NoObject exception.
 
     :param edge_name: The name of the edge.
     :param edge_id: The id of the Edge
     :param status: The status of the content.
+    :param coll_id: The collection id.
     :param session: The database session in use.
 
     :raises NoObject: If no edge is founded.
@@ -562,9 +591,16 @@ def get_contents_by_edge_status(edge_name, edge_id=None, status=None, session=No
         if status:
             if isinstance(status, str) or isinstance(status, unicode):
                 status = ContentStatus.from_sym(str(status))
-            contents = session.query(models.CollectionContent).filter_by(edge_id=edge_id, status=status).all().limit(100)
+
+            if coll_id:
+                contents = session.query(models.CollectionContent).filter_by(edge_id=edge_id, status=status, coll_id=coll_id, content_type=content_type).all()
+            else:
+                contents = session.query(models.CollectionContent).filter_by(edge_id=edge_id, status=status, content_type=content_type).all()
         else:
-            contents = session.query(models.CollectionContent).filter_by(edge_id=edge_id).all().limit(100)
+            if coll_id:
+                contents = session.query(models.CollectionContent).filter_by(edge_id=edge_id, coll_id=coll_id, content_type=content_type).all()
+            else:
+                contents = session.query(models.CollectionContent).filter_by(edge_id=edge_id, content_type=content_type).all()
 
         for content in contents:
             content['content_type'] = content.content_type
