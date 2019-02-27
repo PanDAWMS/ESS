@@ -27,6 +27,9 @@ properties = {
 client = Client(host='https://aipanda182.cern.ch:8443')
 
 try:
-    client.add_request(**properties)
+    request_id = client.add_request(**properties)
 except exceptions.DuplicatedObject as ex:
     print(ex)
+
+req = client.get_request(request_id=request_id)
+print req
