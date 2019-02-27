@@ -12,7 +12,7 @@
 import traceback
 
 from ess.common.constants import Sections
-from ess.common.exceptions import NoObject, NoRequestedData, NoSuitableEdges, BrokerPluginError
+from ess.common.exceptions import NoObject, NoRequestedData, NoSuitableEdges, NoPluginException, DaemonPluginError
 from ess.common.utils import setup_logging
 from ess.core.catalog import add_collection, get_collection
 from ess.core.edges import get_edges
@@ -77,13 +77,13 @@ class Broker(BaseDaemon):
                 except Exception as error:
                     self.logger.critical("Request dataset(%s:%s) cannot be found from data management system: %s, %s" %
                                          (req.scope, req.name, error, traceback.format_exc()))
-                    raise NoRequestedData("Request dataset cannot be found from data management system")
+                    raise DaemonPluginError("Request dataset cannot be found from data management system")
 
                 collection_id = add_collection(**collection)
                 collection = get_collection(req.scope, req.name, coll_id=collection_id)
             else:
                 self.logger.critical("No available data finder plugins")
-                raise NoRequestedData("No available data finder plugins")
+                raise NoPluginException("No available data finder plugins")
 
         return collection
 
@@ -107,10 +107,10 @@ class Broker(BaseDaemon):
                 edge = self.plugins['requestbroker'].broker_request(req, collection, edges_canditates)
             except Exception as error:
                 self.logger.error("Broker plugin throws an exception: %s" % (str(error), traceback.format_exc()))
-                raise BrokerPluginError("Broker plugin throws an exception: %s" % (str(error), traceback.format_exc()))
+                raise DaemonPluginError("Broker plugin throws an exception: %s" % (str(error), traceback.format_exc()))
         else:
             self.logger.critical("No available request broker plugins")
-            raise BrokerPluginError("No available request broker plugins")
+            raise NoPluginException("No available request broker plugins")
         return edge
 
     def process_task(self, req):
@@ -140,7 +140,7 @@ class Broker(BaseDaemon):
             req.status = RequestStatus.WAITING
             req.errors = {'message': str(error)}
             return req
-        except BrokerPluginError as error:
+        except DaemonPluginError as error:
             req.status = RequestStatus.ERROR
             req.errors = {'message': str(error)}
             return req

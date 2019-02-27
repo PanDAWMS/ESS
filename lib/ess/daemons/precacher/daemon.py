@@ -13,7 +13,7 @@ import traceback
 
 
 from ess.common.constants import Sections
-from ess.common.exceptions import NoRequestedData
+from ess.common.exceptions import NoRequestedData, NoPluginException, DaemonPluginError
 from ess.common.utils import setup_logging
 from ess.core.requests import get_requests, update_request
 from ess.core.catalog import add_contents
@@ -56,10 +56,10 @@ class PreCacher(BaseDaemon):
                 return files
             except Exception as error:
                 self.logger.error("Precacher plugin throws an exception: %s, %s" % (error, traceback.format_exc()))
-                raise NoRequestedData("Precacher plugin throws an exception: %s" % (error))
+                raise DaemonPluginError("Precacher plugin throws an exception: %s" % (error))
         else:
             self.logger.critical("No available pre-cache plugins")
-            raise NoRequestedData("No available pre-cache plugins")
+            raise NoPluginException("No available pre-cache plugins")
 
     def process_task(self, req):
         """

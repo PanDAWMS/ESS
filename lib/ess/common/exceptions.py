@@ -29,10 +29,11 @@ Catagories:
  3. Rest related exception
     1. bad request
     2. connection error
- 4. broker exception
+ 4. Daemon exception
     1. NoRquestedData
     2. No suitable Edges
-    3. Broker plugin exception
+    3. No plugin exception
+    4. Daemon plugin exception
 """
 
 
@@ -162,17 +163,17 @@ class ConnectionException(RestException):
         self.error_code = 302
 
 
-class BrokerException(ESSException):
+class DaemonException(ESSException):
     """
     BrokerException
     """
     def __init__(self, *args, **kwargs):
-        super(BrokerException, self).__init__(*args, **kwargs)
+        super(DaemonException, self).__init__(*args, **kwargs)
         self._message = "Broker exception."
         self.error_code = 400
 
 
-class NoRequestedData(BrokerException):
+class NoRequestedData(DaemonException):
     """
     NoRequestedData Exception
     """
@@ -182,7 +183,7 @@ class NoRequestedData(BrokerException):
         self.error_code = 401
 
 
-class NoSuitableEdges(BrokerException):
+class NoSuitableEdges(DaemonException):
     """
     NoSuitableEdges exception
     """
@@ -192,11 +193,21 @@ class NoSuitableEdges(BrokerException):
         self.error_code = 402
 
 
-class BrokerPluginError(BrokerException):
+class NoPluginException(DaemonException):
     """
-    BrokerPluginError exception
+    NoPluginException exception
     """
     def __init__(self, *args, **kwargs):
-        super(BrokerPluginError, self).__init__(*args, **kwargs)
-        self._message = "Broker plugin exception."
+        super(NoPluginException, self).__init__(*args, **kwargs)
+        self._message = "No plugin exception."
         self.error_code = 403
+
+
+class DaemonPluginError(DaemonException):
+    """
+    DaemonPluginError exception
+    """
+    def __init__(self, *args, **kwargs):
+        super(DaemonPluginError, self).__init__(*args, **kwargs)
+        self._message = "Daemon plugin exception."
+        self.error_code = 404

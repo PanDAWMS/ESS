@@ -51,6 +51,8 @@ class BaseDaemon(Process):
         self.logger = None
         self.setup_logger()
 
+        self.resource_name = self.get_resouce_name()
+
     def setup_logger(self):
         """
         Setup logger
