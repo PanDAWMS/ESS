@@ -82,6 +82,7 @@ class PreCacher(BaseDaemon):
                 ret_files.append(ret_file)
             add_contents(req.scope, req.name, self.resource_name, ret_files)
             req.status = RequestStatus.PRECACHED
+            req.processing_meta['collection_status'] = str(RequestStatus.PRECACHED)
             return req
         except NoRequestedData as error:
             req.status = RequestStatus.ERROR

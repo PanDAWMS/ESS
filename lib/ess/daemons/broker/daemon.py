@@ -129,12 +129,14 @@ class Broker(BaseDaemon):
             req.status = RequestStatus.ASSIGNING
             req.edge_id = edge.edge_id
 
-            req.processing_meta = {}
+            if not req.processing_meta:
+                req.processing_meta = {}
+
             req.processing_meta['coll_id'] = collection.coll_id
-            req.processing_meta['collection_type'] = collection.collection_type
+            req.processing_meta['collection_type'] = str(collection.collection_type)
             req.processing_meta['size'] = collection.coll_size
             req.processing_meta['total_files'] = collection.total_files
-            req.processing_meta['collection_status'] = collection.global_status
+            req.processing_meta['collection_status'] = str(collection.global_status)
 
         except NoSuitableEdges as error:
             req.status = RequestStatus.WAITING
