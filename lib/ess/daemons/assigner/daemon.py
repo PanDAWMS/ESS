@@ -11,7 +11,7 @@
 
 from ess.common.constants import Sections
 from ess.common.utils import setup_logging
-from ess.core.requests import get_requests_by_edge, update_request
+from ess.core.requests import get_requests, update_request
 from ess.daemons.common.basedaemon import BaseDaemon
 from ess.orm.constants import RequestStatus
 
@@ -33,7 +33,7 @@ class Assigner(BaseDaemon):
         self.resource_name = self.get_resouce_name()
 
     def assign_local_requests(self):
-        reqs = get_requests_by_edge(self.resource_name)
+        reqs = get_requests(edge_name=self.resource_name, status=RequestStatus.ASSIGNING)
         for req in reqs:
             req.status = RequestStatus.ASSIGNED
             update_request(req.request_id, {'status': req.status})
@@ -65,7 +65,7 @@ class Assigner(BaseDaemon):
         """
         Finish processing the finished tasks, for example, update db status.
         """
-        self.graceful_stop.wait(600)
+        self.graceful_stop.wait(30)
 
 
 if __name__ == '__main__':
