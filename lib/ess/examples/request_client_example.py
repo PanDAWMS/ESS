@@ -17,7 +17,7 @@ properties = {
     'name': 'mc16_13TeV.450525.MadGraphPythia8EvtGen_A14NNPDF23LO_X2000tohh_bbtautau_hadhad.merge.EVNT.e7244_e5984_tid16986378_00',
     'data_type': 'DATASET',
     'granularity_type': 'PARTIAL',
-    'granularity_level': 10,
+    'granularity_level': 1000,
     'priority': 99,
     'edge_id': None,
     'status': 'NEW',
