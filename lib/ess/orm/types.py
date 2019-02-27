@@ -15,6 +15,7 @@ Borrowed from:
 https://github.com/rucio/rucio/blob/master/lib/rucio/db/sqla/types.py
 """
 
+import json
 import uuid
 
 from sqlalchemy.dialects.postgresql import UUID, JSONB
@@ -87,7 +88,30 @@ class JSON(TypeDecorator):
             return dialect.type_descriptor(JSONB())
         elif dialect.name == 'mysql':
             return dialect.type_descriptor(String(1024))
+            # return dialect.type_descriptor(types.JSON())
         elif dialect.name == 'oracle':
             return dialect.type_descriptor(CLOB())
         else:
             return dialect.type_descriptor(String())
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        elif dialect.name == 'postgresql':
+            return json.dumps(value)
+        elif dialect.name == 'oracle':
+            return json.dumps(value)
+        elif dialect.name == 'mysql':
+            return json.dumps(value)
+        else:
+            return json.dumps(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        elif dialect.name == 'oracle':
+            return json.loads(value)
+        elif dialect.name == 'mysql':
+            return json.loads(value)
+        else:
+            return json.loads(value)
