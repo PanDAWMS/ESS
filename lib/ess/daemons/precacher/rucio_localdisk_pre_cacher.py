@@ -35,8 +35,11 @@ class RucioPreCacher(PluginBase):
             self.transfer_timeout = None
         if not hasattr(self, 'rse'):
             self.rse = None
+
         if not hasattr(self, 'num_threads'):
             self.num_threads = 1
+        else:
+            self.num_threads = int(self.num_threads)
 
     def pre_cache(self, scope, name):
         """
