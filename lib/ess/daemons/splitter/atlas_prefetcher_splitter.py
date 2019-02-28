@@ -14,7 +14,9 @@ Splitter plugin based ATLAS AthenaMP prefetcher
 """
 
 import datetime
+import json
 import logging
+import os
 import threading
 import time
 import traceback
@@ -117,7 +119,8 @@ class AtlasPrefetcher(threading.Thread):
         if not self.request_queue.empty():
             req = self.request_queue.get(False)
             if req:
-                req = str([req])
+                # req = str([req])
+                req = json.dumps([req])
                 self.logger.info("Inject a message to prefetcher: %s" % req)
                 self.message_thread.send(req)
 
@@ -158,6 +161,8 @@ class AtlasPrefetcherSplitter(PluginBase, threading.Thread):
 
         if not hasattr(self, 'num_threads'):
             self.num_threads = 1
+        else:
+            self.num_threads = int(self.num_threads)
 
         if not hasattr(self, 'output_prefix'):
             self.output_prefix = 'splitted_eventranges.pool.root'
@@ -232,10 +237,11 @@ class AtlasPrefetcherSplitter(PluginBase, threading.Thread):
         self.logger.info("Sending %s requests to Atlas Prefetcher" % len(reqs))
         for req in reqs:
             event_range = {'eventRangeID': '%s-%s-%s-%s' % (req.coll_id, req.content_id, req.min_id, req.max_id),
-                           # 'scope': req.scope,
+                           'scope': req.scope,
                            'LFN': req.name,
                            'startEvent': req.min_id,
                            'lastEvent': req.max_id,
+                           'GUID': '4857B452-50F4-A34E-A181-94CB673CEB63',
                            'PFN': req.pfn}
             self.request_queue.put(event_range)
 
@@ -243,7 +249,7 @@ class AtlasPrefetcherSplitter(PluginBase, threading.Thread):
         self.request_queue.qsize()
 
     def need_more_requests(self):
-        if self.request_queue.qsize() < self.num_threads:
+        if self.request_queue.qsize() < int(self.num_threads):
             return True
         else:
             return False
@@ -256,12 +262,16 @@ class AtlasPrefetcherSplitter(PluginBase, threading.Thread):
         Get splitted outputs
         """
         ret = []
-        for i in range(self.output_queue.qsize()):
+        while not self.output_queue.empty():
             output = self.output_queue.get()
-            output_ret = {'content_id': output[1],
-                          'coll_id': output[2],
-                          'size': output[2],
-                          'pfn': output[3]}
+            self.logger.debug("Got output message: %s" % output)
+            pfn, id, cpu, wall = output.split(',')
+            coll_id, content_id, min_id, max_id = id.split('-')
+            coll_id = coll_id.replace('ID:', '')
+            output_ret = {'content_id': int(content_id),
+                          'coll_id': int(coll_id),
+                          'size': os.path.getsize(pfn),
+                          'pfn': pfn}
             ret.append(output_ret)
         return ret
 

@@ -51,6 +51,17 @@ class Splitter(BaseDaemon):
             self.logger.critical("No available splitter plugins")
             raise NoPluginException("No available splitter plugins")
 
+    def start_stagers(self):
+        if 'stager' in self.plugins:
+            try:
+                self.logger.info("Starting stager plugin %s" % self.plugins['stager'])
+                self.plugins['stager'].set_output_queue(self.output_queue)
+                self.plugins['stager'].start()
+                self.logger.info("Stager plugin %s started" % self.plugins['stager'])
+            except Exception as error:
+                self.logger.error("Stager plugin throws an exception: %s, %s" % (error, traceback.format_exc()))
+                raise DaemonPluginError("Stager plugin throws an exception: %s" % (error))
+
     def prepare_split_request_task(self):
         """
         Prepare split request
@@ -118,12 +129,13 @@ class Splitter(BaseDaemon):
         """
         if 'stager' in self.plugins:
             try:
-                self.logger.info("Starting stager plugin %s to stage out outputs" % self.plugins['stager'])
-                self.plugins['stager'].stage_out_outputs(self.output_queue, outputs)
+                self.logger.info("Staging out outputs: %s" % outputs)
+                self.plugins['stager'].stage_out_outputs(outputs)
             except Exception as error:
-                self.logger.error("Splitter plugin throws an exception: %s, %s" % (error, traceback.format_exc()))
-                raise DaemonPluginError("Splitter plugin throws an exception: %s" % (error))
+                self.logger.error("Stager plugin throws an exception: %s, %s" % (error, traceback.format_exc()))
+                raise DaemonPluginError("Stager plugin throws an exception: %s" % (error))
         else:
+            self.logger.info("No stager plugin, will directly register the outputs")
             for output in outputs:
                 self.output_queue.put(output)
 
@@ -134,7 +146,7 @@ class Splitter(BaseDaemon):
         update_files = {}
         for file in files:
             update_files[file['content_id']] = {'status': ContentStatus.AVAILABLE,
-                                                'pfn_siz': file['size'],
+                                                'pfn_size': file['size'],
                                                 'pfn': file['pfn']}
         update_contents_by_id(update_files)
 
@@ -150,12 +162,12 @@ class Splitter(BaseDaemon):
             self.load_plugins()
 
             self.start_splitter_process()
+            self.start_stagers()
 
             while not self.graceful_stop.is_set():
                 try:
                     self.prepare_split_request_task()
 
-                    self.logger.debug("need_more_requests: %s" % self.plugins['splitter'].need_more_requests())
                     if self.plugins['splitter'].need_more_requests():
                         self.logger.info("Splitter plugin needs more events")
 

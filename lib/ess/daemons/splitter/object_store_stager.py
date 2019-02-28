@@ -68,7 +68,7 @@ class Stager(threading.Thread):
                                calling_format=boto.s3.connection.OrdinaryCallingFormat())
 
     def get_bucket_name(self, coll_id):
-        bucket_name = '%s_%s' % (self.bucket_name, coll_id)
+        bucket_name = '%s-%s' % (self.bucket_name, coll_id)
         return bucket_name
 
     def get_bucket(self, coll_id):
@@ -111,25 +111,31 @@ class Stager(threading.Thread):
 
     def run(self):
         while not self.graceful_stop.is_set():
-            if not self.request_queue.empty():
-                req = self.request_queue.get(False)
-                if req:
-                    output = self.stage_out(req)
-                    if output:
-                        self.output_queue.put(output)
-            else:
-                time.sleep(1)
+            try:
+                if not self.request_queue.empty():
+                    req = self.request_queue.get(False)
+                    if req:
+                        self.logger.debug("Staging out %s" % req)
+                        output = self.stage_out(req)
+                        if output:
+                            self.logger.debug("Successfully staged out: %s" % output)
+                            self.output_queue.put(output)
+                else:
+                    time.sleep(1)
+            except Exception as error:
+                self.logger.error("Stager throws an exception: %s, %s" % (error, traceback.format_exc()))
 
 
-class ObjectStoreStager(PluginBase, threading.Thread):
+class ObjectStoreStager(PluginBase):
     def __init__(self, **kwargs):
-        threading.Thread.__init__(self)
         super(ObjectStoreStager, self).__init__(**kwargs)
         self.setup_logger()
         self.graceful_stop = threading.Event()
 
         if not hasattr(self, 'num_threads'):
             self.num_threads = 1
+        else:
+            self.num_threads = int(self.num_threads)
 
         if not hasattr(self, 'access_key'):
             raise Exception('access_key is required but not defined.')
@@ -139,6 +145,8 @@ class ObjectStoreStager(PluginBase, threading.Thread):
             raise Exception('hostname is required but not defined.')
         if not hasattr(self, 'port'):
             raise Exception('port is required but not defined.')
+        else:
+            self.port = int(self.port)
         if not hasattr(self, 'is_secure'):
             raise Exception('is_secure is required but not defined.')
         if not hasattr(self, 'bucket_name'):
@@ -148,6 +156,8 @@ class ObjectStoreStager(PluginBase, threading.Thread):
             self.signed_url = True
         if not hasattr(self, 'lifetime'):
             self.lifetime = 3600 * 24 * 7
+        else:
+            self.lifetime = int(self.lifetime)
 
         self.request_queue = Queue.Queue()
         self.output_queue = None
@@ -156,7 +166,7 @@ class ObjectStoreStager(PluginBase, threading.Thread):
     def set_output_queue(self, output_queue):
         self.output_queue = output_queue
 
-    def start_stagers(self):
+    def start(self):
         for i in range(self.num_threads):
             stager = Stager(self.request_queue,
                             self.output_queue,
@@ -169,7 +179,7 @@ class ObjectStoreStager(PluginBase, threading.Thread):
                             is_secure=self.is_secure,
                             signed_url=self.signed_url,
                             lifetime=self.lifetime)
-
+            stager.start()
             self.threads.append(stager)
 
     def stop(self):
@@ -178,4 +188,5 @@ class ObjectStoreStager(PluginBase, threading.Thread):
 
     def stage_out_outputs(self, outputs):
         for output in outputs:
+            self.logger.debug("Adding to stager queue: %s" % output)
             self.request_queue.put(output)
