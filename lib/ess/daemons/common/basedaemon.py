@@ -66,7 +66,7 @@ class BaseDaemon(Process):
         self.graceful_stop.set()
 
     def get_resouce_name(self):
-        return config_get(Sections.ResourceManager, 'name')
+        return config_get(Sections.ResourceManager, 'resource_name')
 
     def load_plugin_attributes(self, name, plugin):
         """
