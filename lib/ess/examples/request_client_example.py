@@ -15,9 +15,21 @@ from ess.client.client import Client
 properties = {
     'scope': 'mc16_13TeV',
     'name': 'mc16_13TeV.450525.MadGraphPythia8EvtGen_A14NNPDF23LO_X2000tohh_bbtautau_hadhad.merge.EVNT.e7244_e5984_tid16986378_00',
-    'data_type': 'DATASET',
+    'data_type': 'FILE',
     'granularity_type': 'PARTIAL',
-    'granularity_level': 1000,
+    'granularity_level': 50,
+    'priority': 99,
+    'edge_id': None,
+    'status': 'NEW',
+    'request_meta': {'jeditaskid': 16986388, 'site': 'CERN'},
+}
+
+properties = {
+    'scope': 'mc15_13TeV',
+    'name': 'EVNT.06402143._000021.pool.root.1',
+    'data_type': 'FILE',
+    'granularity_type': 'PARTIAL',
+    'granularity_level': 50,
     'priority': 99,
     'edge_id': None,
     'status': 'NEW',
