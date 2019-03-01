@@ -12,6 +12,7 @@
 import datetime
 import logging
 import os
+import requests
 import subprocess
 import sys
 
@@ -109,3 +110,19 @@ def get_space_from_string(space_str):
         return int(float(space_str.split('P')[0]) * P)
     else:
         return int(space_str)
+
+
+def urlretrieve(url, dest, timeout=300):
+    """
+    Download a file.
+
+    :param url: The url of the source file.
+    :param dest: destination file path.
+    """
+    with open(dest, 'wb') as f:
+        r = requests.get(url, allow_redirects=True, timeout=timeout)
+        if r.status_code == 200:
+            f.write(r.content)
+            return 0
+        else:
+            return -1
