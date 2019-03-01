@@ -16,13 +16,14 @@ operations related to collections and collection content.
 import sqlalchemy
 import sqlalchemy.orm
 
-
+from sqlalchemy import and_
 from sqlalchemy.exc import DatabaseError, IntegrityError
 
 from ess.common import exceptions
 from ess.core.edges import get_edge_id
 from ess.orm import models
 from ess.orm.constants import CollectionType, CollectionStatus, ContentType, ContentStatus, CollectionReplicasStatus
+from ess.orm.models import CollectionContent
 from ess.orm.session import read_session, transactional_session
 
 
@@ -539,27 +540,52 @@ def get_content_best_match(scope, name, min_id=None, max_id=None, edge_name=None
     """
 
     try:
-        if not edge_id:
+        if not edge_id and edge_name:
             edge_id = get_edge_id(edge_name=edge_name, session=session)
 
-        if min_id is not None and max_id is not None:
-            if status:
-                query = session.query(models.CollectionContent).filter_by(scope=scope, name=name, edge_id=edge_id, status=status)
+        if status and (isinstance(status, str) or isinstance(status, unicode)):
+            status = ContentStatus.from_sym(str(status))
+
+        if edge_id:
+            if min_id is not None and max_id is not None:
+                if status:
+                    query = session.query(models.CollectionContent).filter_by(scope=scope, name=name, edge_id=edge_id, status=status)
+                else:
+                    query = session.query(models.CollectionContent).filter_by(scope=scope, name=name, edge_id=edge_id)
+                query = query.filter(and_(CollectionContent.min_id <= min_id, CollectionContent.max_id >= max_id))
+
+                content = None
+                for row in query:
+                    if (not content) or (content['max_id'] - content['min_id'] > row['max_id'] - row['min_id']):
+                        content = row
+                if content is None:
+                    raise sqlalchemy.orm.exc.NoResultFound()
             else:
-                query = session.query(models.CollectionContent).filter_by(scope=scope, name=name, edge_id=edge_id)
-            query = query.filter(min_id <= min_id, max_id >= max_id)
-            content = None
-            for row in query:
-                if not content or content['max_id'] - content['min_id'] > row['max_id'] - row['min_id']:
-                    content = row
-            if content is None:
-                raise sqlalchemy.orm.exc.NoResultFound()
+                content_type = ContentType.FILE
+                if status:
+                    content = session.query(models.CollectionContent).filter_by(scope=scope, name=name, content_type=content_type, edge_id=edge_id, status=status).one()
+                else:
+                    content = session.query(models.CollectionContent).filter_by(scope=scope, name=name, content_type=content_type, edge_id=edge_id).one()
         else:
-            content_type = ContentType.FILE
-            if status:
-                content = session.query(models.CollectionContent).filter_by(scope=scope, name=name, content_type=content_type, edge_id=edge_id, status=status).one()
+            if min_id is not None and max_id is not None:
+                if status:
+                    query = session.query(models.CollectionContent).filter_by(scope=scope, name=name, status=status)
+                else:
+                    query = session.query(models.CollectionContent).filter_by(scope=scope, name=name)
+                query = query.filter(and_(CollectionContent.min_id <= min_id, CollectionContent.max_id >= max_id))
+
+                content = None
+                for row in query:
+                    if (not content) or (content['max_id'] - content['min_id'] > row['max_id'] - row['min_id']):
+                        content = row
+                if content is None:
+                    raise sqlalchemy.orm.exc.NoResultFound()
             else:
-                content = session.query(models.CollectionContent).filter_by(scope=scope, name=name, content_type=content_type, edge_id=edge_id).one()
+                content_type = ContentType.FILE
+                if status:
+                    content = session.query(models.CollectionContent).filter_by(scope=scope, name=name, content_type=content_type, status=status).one()
+                else:
+                    content = session.query(models.CollectionContent).filter_by(scope=scope, name=name, content_type=content_type).one()
 
         content['content_type'] = content.content_type
         content['status'] = content.status
