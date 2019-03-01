@@ -15,6 +15,7 @@ Main client class for ESS Rest callings.
 
 
 import os
+import urllib
 import warnings
 
 from ess.common import exceptions
@@ -55,3 +56,33 @@ class Client(CatalogClient, EdgeClient, RequestClient):
 
         if not os.path.exists(client_proxy):
             raise exceptions.RestException("Cannot find a valid x509 proxy.")
+
+    def download(self, scope, name, min_id, max_id, dest_dir=None):
+        """
+        To download a file or a partial file.
+        """
+
+        content = self.get_content(scope, name, min_id, max_id, status='AVAILABLE')
+        if content:
+            if content['content_type'] == 'FILE':
+                filename = content['name']
+            else:
+                filename = '%s.%s-%s-%s-%s' % (content['name'], content['coll_id'], content['content_id'], content['min_id'], content['max_id'])
+
+            if dest_dir:
+                filename = os.path.join(dest_dir, filename)
+            local_filename, ret_msg = urllib.urlretrieve(content['pfn'], filename)
+            if os.path.getsize(local_filename) == content['pfn_size']:
+                return {'status': 0, 'message': 'successfully downloded.',
+                        'metadata': {'name': local_filename,
+                                     'coll_id': content['coll_id'],
+                                     'content_id': content['content_id'],
+                                     'min_id': content['min_id'],
+                                     'max_id': content['max_id']
+                                     }
+                        }
+            else:
+                os.remove(local_filename)
+                return {'status': -1, 'message': 'File size mismatch, clean.'}
+        else:
+            return {'status': -1, 'message': 'No matched files.'}
