@@ -33,6 +33,11 @@ class RucioDataFinder(PluginBase):
         info = d.get_did(scope, name)
         ret = {'collection_type': info['type'],
                'size': info['bytes'],
-               'status': 'OPEN' if info['open'] else 'CLOSED',
                'total_files': info['length']}
+
+        if info['type'] in ['FILE']:
+            ret['status'] = 'AVAILABLE'
+        else:
+            ret['status'] = 'OPEN' if info['open'] else 'CLOSED'
+
         return ret
