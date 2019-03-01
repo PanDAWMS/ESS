@@ -15,4 +15,5 @@ RootDir="$( dirname "$CurrentDir" )"
 source ${RootDir}/.venv/bin/activate
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${RootDir}/lib/externels/mysqlclient/
 
-export RUCIO_HOME=etc/rucio_client
+#export RUCIO_HOME=etc/rucio_client
+export ESS_HOME=/afs/cern.ch/user/w/wguan/workdisk/ESS
