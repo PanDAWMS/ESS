@@ -5,7 +5,8 @@ cd {work_dir}
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
 source $ATLAS_LOCAL_ROOT_BASE/user/atlasLocalSetup.sh --quiet
 # source $AtlasSetup/scripts/asetup.sh AtlasOffline,21.0.31,notest --platform x86_64-slc6-gcc49-opt --makeflags="$MAKEFLAGS"
-source $AtlasSetup/scripts/asetup.sh AtlasOffline,21.0.15,notest --platform x86_64-slc6-gcc49-opt
+# source $AtlasSetup/scripts/asetup.sh AtlasOffline,21.0.15,notest --platform x86_64-slc6-gcc49-opt
+source $AtlasSetup/scripts/asetup.sh Athena,21.0.31,notest --platform x86_64-slc6-gcc49-opt
 
 export ATHENA_PROC_NUMBER={num_processes}
 
