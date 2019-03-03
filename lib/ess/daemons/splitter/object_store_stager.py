@@ -186,6 +186,12 @@ class ObjectStoreStager(PluginBase):
         for thread in self.threads:
             thread.stop()
 
+    def is_alive(self):
+        for thread in self.threads:
+            if thread.is_alive():
+                return True
+        return False
+
     def stage_out_outputs(self, outputs):
         for output in outputs:
             self.logger.debug("Adding to stager queue: %s" % output)

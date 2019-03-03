@@ -174,6 +174,11 @@ class AtlasPrefetcherSplitter(PluginBase, threading.Thread):
         if not hasattr(self, 'log_dir'):
             raise Exception('log_dir is required but not defined')
 
+        if not hasattr(self, 'stop_delay'):
+            self.stop_delay = 180
+        else:
+            self.stop_delay = int(self.stop_delay)
+
         self.request_queue = Queue.Queue()
         self.output_queue = Queue.Queue()
 
@@ -286,3 +291,7 @@ class AtlasPrefetcherSplitter(PluginBase, threading.Thread):
 
         for process in self.processes:
             process.stop()
+
+        while(len(self.processes)):
+            self.processes = [p for p in self.processes if p.is_alive()]
+            time.sleep(1)

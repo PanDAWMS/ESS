@@ -51,6 +51,27 @@ class Splitter(BaseDaemon):
             self.logger.critical("No available splitter plugins")
             raise NoPluginException("No available splitter plugins")
 
+    def stop_splitter_process(self):
+        if 'splitter' in self.plugins:
+            try:
+                self.logger.info("Stopping splitter plugin %s" % self.plugins['splitter'])
+                self.plugins['splitter'].stop()
+            except Exception as error:
+                self.logger.error("Splitter plugin throws an exception: %s, %s" % (error, traceback.format_exc()))
+                raise DaemonPluginError("Splitter plugin throws an exception: %s" % (error))
+        else:
+            self.logger.critical("No available splitter plugins")
+            raise NoPluginException("No available splitter plugins")
+
+    def is_splitter_process_alive(self):
+        if 'splitter' in self.plugins:
+            try:
+                self.plugins['splitter'].is_alive()
+            except Exception as error:
+                self.logger.error("Splitter plugin throws an exception: %s, %s" % (error, traceback.format_exc()))
+                raise DaemonPluginError("Splitter plugin throws an exception: %s" % (error))
+        return False
+
     def start_stagers(self):
         if 'stager' in self.plugins:
             try:
@@ -61,6 +82,24 @@ class Splitter(BaseDaemon):
             except Exception as error:
                 self.logger.error("Stager plugin throws an exception: %s, %s" % (error, traceback.format_exc()))
                 raise DaemonPluginError("Stager plugin throws an exception: %s" % (error))
+
+    def stop_stagers(self):
+        if 'stager' in self.plugins:
+            try:
+                self.logger.info("Stopping stager plugin %s" % self.plugins['stager'])
+                self.plugins['stager'].stop()
+            except Exception as error:
+                self.logger.error("Stager plugin throws an exception: %s, %s" % (error, traceback.format_exc()))
+                raise DaemonPluginError("Stager plugin throws an exception: %s" % (error))
+
+    def is_stagers_alive(self):
+        if 'stager' in self.plugins:
+            try:
+                self.plugins['stager'].is_alive()
+            except Exception as error:
+                self.logger.error("Stager plugin throws an exception: %s, %s" % (error, traceback.format_exc()))
+                raise DaemonPluginError("Stager plugin throws an exception: %s" % (error))
+        return False
 
     def prepare_split_request_task(self):
         """
@@ -201,6 +240,13 @@ class Splitter(BaseDaemon):
                     self.logger.critical("Main thread exception: %s\n%s" % (str(error), traceback.format_exc()))
         except KeyboardInterrupt:
             self.stop()
+        except Exception as error:
+            self.logger.error("Main thread ESSException: %s, %s" % (str(error), traceback.format_exc()))
+
+        self.stop_splitter_process()
+        self.stop_stagers()
+        while(self.is_splitter_process_alive() or self.is_stagers_alive()):
+            time.sleep(1)
 
 
 if __name__ == '__main__':
