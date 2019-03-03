@@ -94,6 +94,8 @@ def run_daemons():
 
     while len(RUNNING_DAEMONS):
         RUNNING_DAEMONS = [thr.join(timeout=3.14) for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
+        if len(daemons) != len(RUNNING_DAEMONS):
+            break
 
 
 def stop():
@@ -108,6 +110,7 @@ def stop():
 if __name__ == '__main__':
     try:
         run_daemons()
+        stop()
     except KeyboardInterrupt:
         stop()
     except Exception as error:
