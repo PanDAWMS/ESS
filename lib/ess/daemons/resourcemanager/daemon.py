@@ -9,8 +9,8 @@
 # - Wen Guan, <wen.guan@cern.ch>, 2019
 
 
+import time
 import traceback
-
 
 from ess.common.constants import Sections
 from ess.common.exceptions import NoObject
@@ -38,8 +38,14 @@ class ResourceManager(BaseDaemon):
             self.total_space = 0
         else:
             self.total_space = get_space_from_string(self.total_space)
+        if not hasattr(self, 'resource_check_period'):
+            self.resource_check_period = 1800
+        else:
+            self.resource_check_period = int(self.resource_check_period)
+
         self.used_space = None
         self.num_files = 0
+        self.sched_tasks = [{'name': 'resource_check', 'execute_time': time.time()}]
 
     def get_tasks(self):
         """
@@ -49,10 +55,18 @@ class ResourceManager(BaseDaemon):
         # if self.used_space is not None:
         #     self.graceful_stop.wait(1800)
 
-        tasks = [{'name': 'resource_check'}]
+        ret_tasks = []
+        for task in self.sched_tasks:
+            if task['execute_time'] < time.time():
+                self.sched_tasks.remove(task)
+                ret_tasks.append(task)
+                if task['name'] == 'resource_check':
+                    new_task = task.copy()
+                    new_task['execute_time'] = time.time() + self.resource_check_period
+                    self.sched_tasks.append(new_task)
 
-        self.logger.info("Main thread get %s tasks" % len(tasks))
-        for task in tasks:
+        self.logger.info("Main thread get %s tasks" % len(ret_tasks))
+        for task in ret_tasks:
             self.tasks.put(task)
 
     def process_task(self, task):
