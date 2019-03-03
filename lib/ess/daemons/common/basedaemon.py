@@ -16,7 +16,8 @@ import traceback
 import Queue
 
 from concurrent import futures
-from multiprocessing import Process
+# from multiprocessing import Process
+from threading import Thread
 
 from ess.common.constants import Sections
 from ess.common.config import config_has_section, config_list_options, config_get
@@ -27,7 +28,7 @@ from ess.common.utils import setup_logging
 setup_logging(__name__)
 
 
-class BaseDaemon(Process):
+class BaseDaemon(Thread):
     """
     The base ESS daemon class
     """
