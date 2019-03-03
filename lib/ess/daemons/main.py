@@ -100,6 +100,9 @@ def stop():
 
     [thr.terminate() for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
 
+    while len(RUNNING_DAEMONS):
+        RUNNING_DAEMONS = [thr.join(timeout=3.14) for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
+
 
 if __name__ == '__main__':
     try:
