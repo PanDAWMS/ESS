@@ -28,7 +28,7 @@ edge_properties = {
     'num_files': 0
 }
 
-client = Client(host='https://aipanda182.cern.ch:8443')
+client = Client(host='https://aipanda180.cern.ch:8443')
 
 try:
     client.register_edge('my_edge_name2', **edge_properties)
