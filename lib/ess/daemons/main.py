@@ -14,6 +14,7 @@ Main start entry point for ESS service
 
 
 import logging
+import traceback
 
 from ess.common.constants import Sections
 from ess.common.config import config_has_section, config_has_option, config_list_options, config_get
@@ -108,4 +109,7 @@ if __name__ == '__main__':
     try:
         run_daemons()
     except KeyboardInterrupt:
+        stop()
+    except Exception as error:
+        logger.error("An exception is caught in main process: %s, %s" % (error, traceback.format_exc()))
         stop()
