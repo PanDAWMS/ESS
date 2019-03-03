@@ -14,6 +14,7 @@ Main start entry point for ESS service
 
 
 import logging
+import time
 import traceback
 
 from ess.common.constants import Sections
@@ -100,6 +101,13 @@ def run_daemons():
 
 def stop():
     global RUNNING_DAEMONS
+
+    [thr.stop() for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
+    stop_time = time.time()
+    while len(RUNNING_DAEMONS):
+        RUNNING_DAEMONS = [thr.join(timeout=3.14) for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
+        if time.time() > stop_time + 180:
+            break
 
     [thr.terminate() for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
 
