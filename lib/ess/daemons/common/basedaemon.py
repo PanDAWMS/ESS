@@ -21,7 +21,7 @@ from threading import Thread
 
 from ess.common.constants import Sections
 from ess.common.config import config_has_section, config_list_options, config_get
-from ess.common.exceptions import ESSException
+from ess.common.exceptions import ESSException, DaemonPluginError
 from ess.common.utils import setup_logging
 
 
@@ -53,6 +53,8 @@ class BaseDaemon(Thread):
         self.setup_logger()
 
         self.resource_name = self.get_resouce_name()
+
+        self.messaging_queue = Queue.Queue()
 
     def setup_logger(self):
         """
@@ -113,6 +115,26 @@ class BaseDaemon(Thread):
                         plugin_name = option.replace('plugin.', '').strip()
                         self.logger.info("Loading plugin %s with %s" % (plugin_name, value))
                         self.plugins[plugin_name] = self.load_plugin(plugin_name, value)
+
+    def start_messaging_broker(self):
+        if 'messaging' in self.plugins:
+            try:
+                self.logger.info("Starting messaging broker plugin %s" % self.plugins['messaging'])
+                self.plugins['messaging'].set_request_queues(self.messaging_queue)
+                self.plugins['messaging'].start()
+                self.logger.info("Messaging broker plugin %s started" % self.plugins['stager'])
+            except Exception as error:
+                self.logger.error("Messaging broker plugin throws an exception: %s, %s" % (error, traceback.format_exc()))
+                raise DaemonPluginError("Messaging broker plugin throws an exception: %s" % (error))
+
+    def stop_messaging_broker(self):
+        if 'messaging' in self.plugins:
+            try:
+                self.logger.info("Stopping messaging broker plugin %s" % self.plugins['messaging'])
+                self.plugins['messaging'].stop()
+            except Exception as error:
+                self.logger.error("Messaging broker plugin throws an exception: %s, %s" % (error, traceback.format_exc()))
+                raise DaemonPluginError("Messaging broker plugin throws an exception: %s" % (error))
 
     def get_tasks(self):
         """
