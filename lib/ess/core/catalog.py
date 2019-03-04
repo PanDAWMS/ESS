@@ -16,7 +16,7 @@ operations related to collections and collection content.
 import sqlalchemy
 import sqlalchemy.orm
 
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from sqlalchemy.exc import DatabaseError, IntegrityError
 
 from ess.common import exceptions
@@ -595,7 +595,8 @@ def get_content_best_match(scope, name, min_id=None, max_id=None, edge_name=None
 
 
 @read_session
-def get_contents_by_edge(edge_name, edge_id=None, status=None, coll_id=None, content_type=ContentType.FILE, session=None):
+def get_contents_by_edge(edge_name, edge_id=None, status=None, coll_id=None, content_type=ContentType.FILE,
+                         limit=None, session=None):
     """
     Get a collection content or raise a NoObject exception.
 
@@ -603,6 +604,8 @@ def get_contents_by_edge(edge_name, edge_id=None, status=None, coll_id=None, con
     :param edge_id: The id of the Edge
     :param status: The status of the content.
     :param coll_id: The collection id.
+    :param content_type: The tyep of the content.
+    :param limit: Number to return limited items.
     :param session: The database session in use.
 
     :raises NoObject: If no edge is founded.
@@ -614,19 +617,19 @@ def get_contents_by_edge(edge_name, edge_id=None, status=None, coll_id=None, con
         if not edge_id:
             edge_id = get_edge_id(edge_name=edge_name, session=session)
 
+        query = session.query(models.CollectionContent).filter_by(edge_id=edge_id)
         if status:
             if isinstance(status, str) or isinstance(status, unicode):
                 status = ContentStatus.from_sym(str(status))
+            query = query.filter_by(status=status)
+        if coll_id:
+            query = query.filter_by(coll_id=coll_id)
+        if content_type:
+            query = query.filter_by(content_type=content_type)
+        if limit:
+            query = query.limit(limit)
 
-            if coll_id:
-                contents = session.query(models.CollectionContent).filter_by(edge_id=edge_id, status=status, coll_id=coll_id, content_type=content_type).all()
-            else:
-                contents = session.query(models.CollectionContent).filter_by(edge_id=edge_id, status=status, content_type=content_type).all()
-        else:
-            if coll_id:
-                contents = session.query(models.CollectionContent).filter_by(edge_id=edge_id, coll_id=coll_id, content_type=content_type).all()
-            else:
-                contents = session.query(models.CollectionContent).filter_by(edge_id=edge_id, content_type=content_type).all()
+        contents = query.all()
 
         for content in contents:
             content['content_type'] = content.content_type
@@ -634,6 +637,50 @@ def get_contents_by_edge(edge_name, edge_id=None, status=None, coll_id=None, con
         return contents
     except sqlalchemy.orm.exc.NoResultFound:
         raise exceptions.NoObject('No contents at edge %s with status %s' % (edge_name, status))
+
+
+@read_session
+def get_contents_statistics(edge_name, edge_id=None, coll_id=None, status=None, content_type=None, session=None):
+    """
+    Get content statistics.
+
+    :param edge_name: The name of the edge.
+    :param edge_id: The id of the Edge
+    :param coll_id: The collection id.
+    :param status: The status of the content.
+    :param content_type: The tyep of the content.
+    :param session: The database session in use.
+
+    :returns: dict.
+    """
+
+    try:
+        if not edge_id and edge_name:
+            edge_id = get_edge_id(edge_name=edge_name, session=session)
+
+        query = session.query(models.CollectionContent.edge_id, models.CollectionContent.coll_id,
+                              models.CollectionContent.content_type, models.CollectionContent.status,
+                              func.count(1).label('counter'))
+        if edge_id:
+            query = query.filter_by(edge_id=edge_id)
+        if coll_id:
+            query = query.filter_by(coll_id=coll_id)
+        if status:
+            if isinstance(status, str) or isinstance(status, unicode):
+                status = ContentStatus.from_sym(str(status))
+            query = query.filter_by(status=status)
+        if content_type:
+            if isinstance(content_type, str) or isinstance(content_type, unicode):
+                content_type = ContentType.from_sym(str(content_type))
+            query = query.filter_by(content_type=content_type)
+
+        query = query.group_by(models.CollectionContent.edge_id, models.CollectionContent.coll_id,
+                               models.CollectionContent.content_type, models.CollectionContent.status)
+        statistics = query.all()
+
+        return statistics
+    except sqlalchemy.orm.exc.NoResultFound:
+        raise exceptions.NoObject('Failed to get statistics for edge %s and collection %s' % (edge_id, coll_id))
 
 
 @transactional_session
