@@ -9,8 +9,10 @@
 # - Wen Guan, <wen.guan@cern.ch>, 2019
 
 
+import datetime
+
 from ess.common.constants import Sections
-from ess.common.utils import setup_logging
+from ess.common.utils import setup_logging, date_to_str
 from ess.core.catalog import get_contents_statistics
 from ess.core.requests import get_requests, update_request
 from ess.daemons.common.basedaemon import BaseDaemon
@@ -33,6 +35,11 @@ class Finisher(BaseDaemon):
 
         self.resource_name = self.get_resouce_name()
 
+        if hasattr(self, 'send_messaging') and self.send_messaging:
+            self.send_messaging = True
+        else:
+            self.send_messaging = False
+
     def finish_local_requests(self):
         reqs = get_requests(edge_name=self.resource_name, status=RequestStatus.PRECACHED)
         for req in reqs:
@@ -49,6 +56,14 @@ class Finisher(BaseDaemon):
                     self.logger.info('All files are available for request(%s): %s' % (req.request_id, items))
                     req.status = RequestStatus.AVAILABLE
                     update_request(req.request_id, {'status': req.status})
+
+                    if self.send_messaging:
+                        msg = {'event_type': 'REQUEST_DONE',
+                               'payload': {'scope': req.scope,
+                                           'name': req.name,
+                                           'metadata': req.request_metadata},
+                               'created_at': date_to_str(datetime.datetime.utcnow())}
+                        self.messaging_queue.put(msg)
                 else:
                     self.logger.info('Not all files are available for request(%s): %s' % (req.request_id, items))
             if req.granularity_type == GranularityType.PARTIAL:

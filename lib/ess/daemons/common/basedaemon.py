@@ -206,6 +206,7 @@ class BaseDaemon(Thread):
             self.logger.info("Starting main thread")
 
             self.load_plugins()
+            self.start_messaging_broker()
 
             for i in range(self.num_threads):
                 self.executors.submit(self.run_tasks, i)
@@ -221,6 +222,8 @@ class BaseDaemon(Thread):
                     self.logger.critical("Main thread exception: %s\n%s" % (str(error), traceback.format_exc()))
         except KeyboardInterrupt:
             self.stop()
+
+        self.stop_messaging_broker()
 
 
 if __name__ == '__main__':

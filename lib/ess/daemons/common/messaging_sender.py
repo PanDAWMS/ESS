@@ -41,6 +41,8 @@ class MessagingSender(PluginBase, threading.Thread):
             raise Exception('port is required but not defined.')
         if not hasattr(self, 'vhost'):
             raise Exception('vhost is required but not defined.')
+        if not hasattr(self, 'destination'):
+            raise Exception('destination is required but not defined.')
         if not hasattr(self, 'broker_timeout'):
             self.broker_timeout = 10
         else:

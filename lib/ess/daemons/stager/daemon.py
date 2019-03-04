@@ -9,6 +9,7 @@
 # - Wen Guan, <wen.guan@cern.ch>, 2019
 
 
+import datetime
 import signal
 import time
 import traceback
@@ -16,7 +17,7 @@ import Queue
 
 from ess.common.constants import Sections
 from ess.common.exceptions import ESSException, NoPluginException, DaemonPluginError
-from ess.common.utils import setup_logging
+from ess.common.utils import setup_logging, date_to_str
 from ess.core.catalog import get_contents_by_edge, update_contents_by_id
 from ess.daemons.common.basedaemon import BaseDaemon
 from ess.orm.constants import ContentStatus
@@ -37,6 +38,11 @@ class Stager(BaseDaemon):
         self.finished_queue = Queue.Queue()
 
         self.setup_logger()
+
+        if hasattr(self, 'send_messaging') and self.send_messaging:
+            self.send_messaging = True
+        else:
+            self.send_messaging = False
 
     def start_stagers(self):
         if 'stager' in self.plugins:
@@ -93,13 +99,27 @@ class Stager(BaseDaemon):
         """
 
         update_files = {}
+        messages = []
         while not self.request_queue.empty():
             file = self.request_queue.get()
             update_files[file['content_id']] = {'status': ContentStatus.AVAILABLE,
                                                 'pfn_size': file['pfn_size'],
                                                 'pfn': file['pfn']}
+            msg = {'event_type': 'FILE_AVAILABLE',
+                   'payload': {'scope': file.scope,
+                               'name': file.name,
+                               'startEvent': file.min_id,
+                               'lastEvent': file.max_id,
+                               'pfn': file.pfn},
+                   'created_at': date_to_str(datetime.datetime.utcnow())}
+            messages.append(msg)
+
         self.logger.info('Got %s staged outputs' % len(update_files))
         update_contents_by_id(update_files)
+
+        if self.send_messaging:
+            for msg in messages:
+                self.messaging_queue.put(msg)
 
     def run(self):
         """
@@ -113,6 +133,7 @@ class Stager(BaseDaemon):
             self.load_plugins()
 
             self.start_stagers()
+            self.start_messaging_broker()
 
             while not self.graceful_stop.is_set():
                 try:
@@ -136,6 +157,7 @@ class Stager(BaseDaemon):
         self.stop_stagers()
         while(self.is_stagers_alive()):
             time.sleep(1)
+        self.stop_messaging_broker()
 
 
 if __name__ == '__main__':
