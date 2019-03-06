@@ -14,6 +14,7 @@ Main start entry point for ESS service
 
 
 import logging
+import signal
 import time
 import traceback
 
@@ -31,7 +32,9 @@ DAEMONS = {
     'broker': ['ess.daemons.broker.daemon.Broker', Sections.Broker],
     'assigner': ['ess.daemons.assigner.daemon.Assigner', Sections.Assigner],
     'precacher': ['ess.daemons.precacher.daemon.PreCacher', Sections.PreCacher],
-    'splitter': ['ess.daemons.splitter.daemon.Splitter', Sections.Splitter]
+    'splitter': ['ess.daemons.splitter.daemon.Splitter', Sections.Splitter],
+    'stager': ['ess.daemons.stager.daemon.Stager', Sections.Stager],
+    'finisher': ['ess.daemons.finisher.daemon.Finisher', Sections.Finisher]
 }
 RUNNING_DAEMONS = []
 
@@ -94,33 +97,45 @@ def run_daemons():
         daemon.start()
 
     while len(RUNNING_DAEMONS):
-        RUNNING_DAEMONS = [thr.join(timeout=3.14) for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
+        [thr.join(timeout=3.14) for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
+        RUNNING_DAEMONS = [thr for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
         if len(daemons) != len(RUNNING_DAEMONS):
+            logging.critical("Number of active daemons(%s) is not equal number of daemons should run(%s)" % (len(RUNNING_DAEMONS), len(daemons)))
+            logging.critical("Exit main run loop.")
             break
 
 
-def stop():
+def stop(signum=None, frame=None):
     global RUNNING_DAEMONS
 
+    logging.info("Stopping ......")
+    logging.info("Stopping running daemons: %s" % RUNNING_DAEMONS)
     [thr.stop() for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
     stop_time = time.time()
     while len(RUNNING_DAEMONS):
-        RUNNING_DAEMONS = [thr.join(timeout=3.14) for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
+        [thr.join(timeout=3.14) for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
+        RUNNING_DAEMONS = [thr for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
         if time.time() > stop_time + 180:
             break
 
+    logging.info("Still running daemons: %s" % str(RUNNING_DAEMONS))
     [thr.terminate() for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
 
     while len(RUNNING_DAEMONS):
-        RUNNING_DAEMONS = [thr.join(timeout=3.14) for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
-
+        [thr.join(timeout=3.14) for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
+        RUNNING_DAEMONS = [thr for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
 
 if __name__ == '__main__':
+
+    signal.signal(signal.SIGTERM, stop)
+    signal.signal(signal.SIGQUIT, stop)
+    signal.signal(signal.SIGINT, stop)
+
     try:
         run_daemons()
         stop()
     except KeyboardInterrupt:
         stop()
     except Exception as error:
-        logger.error("An exception is caught in main process: %s, %s" % (error, traceback.format_exc()))
+        logging.error("An exception is caught in main process: %s, %s" % (error, traceback.format_exc()))
         stop()
