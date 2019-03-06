@@ -35,10 +35,10 @@ def setup_logging(name):
     if config_has_section('common') and config_has_option('common', 'logdir'):
         logging.basicConfig(filename=os.path.join(config_get('common', 'logdir'), name),
                             level=loglevel,
-                            format='%(asctime)s\t%(processName)s\t%(process)d\t%(levelname)s\t%(message)s')
+                            format='%(asctime)s\t%(threadName)s\t%(levelname)s\t%(message)s')
     else:
         logging.basicConfig(stream=sys.stdout, level=loglevel,
-                            format='%(asctime)s\t%(processName)s\t%(process)d\t%(levelname)s\t%(message)s')
+                            format='%(asctime)s\t%(threadName)s\t%(levelname)s\t%(message)s')
 
 
 def str_to_date(string):
