@@ -95,3 +95,19 @@ class RequestClient(BaseRestClient):
 
         r = self.get_request_response(url, type='DEL')
         return r
+
+    def get_requests(self, **kwargs):
+        """
+        get requests.
+
+        :param kwargs: other attributes of the request.
+
+        :raise exceptions if it's not successful.
+        """
+        path = self.REQUEST_BASEURL
+
+        params = kwargs
+        url = self.build_url(self.host, path=path + '/', params=params)
+
+        r = self.get_request_response(url, type='GET')
+        return r

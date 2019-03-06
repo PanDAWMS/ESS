@@ -18,7 +18,7 @@ from web import application, data, header
 from ess.common import exceptions
 from ess.common.constants import HTTP_STATUS_CODE
 from ess.rest.v1.controller import ESSController
-from ess.core.requests import add_request, get_request, update_request, delete_request
+from ess.core.requests import add_request, get_request, update_request, delete_request, get_requests
 
 
 URLS = (
@@ -29,6 +29,54 @@ URLS = (
 
 class Requests(ESSController):
     """ Create request """
+
+    def GET(self):
+        """
+        Get requests.
+
+        HTTP Success:
+            200 OK
+        HTTP Error:
+            404 Not Found
+            500 InternalError
+        :returns: A list containing requests.
+        """
+        header('Content-Type', 'application/x-json-stream')
+        params = input()
+
+        status = None
+        edge_name = None
+        edge_id = None
+        if 'status' in params:
+            status = params['status']
+        if 'edge_name' in params:
+            edge_name = params['edge_name']
+        if 'edge_id' in params:
+            edge_id = int(params['edge_id'])
+        reqs = get_requests(status=status, edge_name=edge_name, edge_id=edge_id)
+
+        try:
+            status = None
+            edge_name = None
+            edge_id = None
+            if 'status' in params:
+                status = params['status']
+            if 'edge_name' in params:
+                edge_name = params['edge_name']
+            if 'edge_id' in params:
+                edge_id = int(params['edge_id'])
+            reqs = get_requests(status=status, edge_name=edge_name, edge_id=edge_id)
+        except exceptions.NoObject as error:
+            raise error
+            raise self.generate_http_response(HTTP_STATUS_CODE.NotFound, exc_cls=error.__class__.__name__, exc_msg=error)
+        except exceptions.ESSException as error:
+            raise self.generate_http_response(HTTP_STATUS_CODE.InternalError, exc_cls=error.__class__.__name__, exc_msg=error)
+        except Exception as error:
+            print(error)
+            print(format_exc())
+            raise self.generate_http_response(HTTP_STATUS_CODE.InternalError, exc_cls=exceptions.CoreException.__name__, exc_msg=error)
+
+        raise self.generate_http_response(HTTP_STATUS_CODE.OK, data=[req.to_dict() for req in reqs])
 
     def POST(self):
         """ Create Request.
