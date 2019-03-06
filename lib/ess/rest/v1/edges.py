@@ -42,11 +42,6 @@ class Edges(ESSController):
         header('Content-Type', 'application/x-json-stream')
         params = input()
 
-        status = None
-        if 'status' in params:
-            status = params['status']
-        edges = get_edges(status=status)
-
         try:
             status = None
             if 'status' in params:
