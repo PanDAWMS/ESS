@@ -107,7 +107,7 @@ class RequestClient(BaseRestClient):
         path = self.REQUEST_BASEURL
 
         params = kwargs
-        url = self.build_url(self.host, path=path + '/', params=params)
+        url = self.build_url(self.host, path=path, params=params)
 
         r = self.get_request_response(url, type='GET')
         return r

@@ -34,6 +34,22 @@ class CatalogClient(BaseRestClient):
         """
         super(CatalogClient, self).__init__(host=host, client_proxy=client_proxy, timeout=timeout)
 
+    def get_collection(self, scope, name):
+        """
+        Get a collection from the Head service.
+
+        :param scope: The scope of the collection.
+        :param name: The name of the collection.
+
+        :raise exceptions if it's not got successfully.
+        """
+        path = self.CATALOG_BASEURL
+
+        url = self.build_url(self.host, path=os.path.join(path, 'collection/%s/%s' % (scope, name)))
+
+        r = self.get_request_response(url, type='GET')
+        return r
+
     def get_content(self, scope, name, min_id=None, max_id=None, status=None):
         """
         Get content of a file or a partial file from the Head service.
@@ -55,7 +71,41 @@ class CatalogClient(BaseRestClient):
         if status:
             params['status'] = status
 
-        url = self.build_url(self.host, path=os.path.join(path, '%s/%s' % (scope, name)), params=params)
+        url = self.build_url(self.host, path=os.path.join(path, 'content/%s/%s' % (scope, name)), params=params)
+
+        r = self.get_request_response(url, type='GET')
+        return r
+
+    def add_contents(self, collection_scope, collection_name, edge_name, files):
+        """
+        Synchronize the contents to the Head service.
+
+        :param collection_scope: The scope of the collection.
+        :param collection_name: The name of the collection.
+        :param edge_name: The edge name.
+
+        :raise exceptions if it's not got successfully.
+        """
+        path = self.CATALOG_BASEURL
+
+        url = self.build_url(self.host, path=os.path.join(path, 'contents/%s/%s/%s' % (collection_scope, collection_name, edge_name)))
+
+        r = self.get_request_response(url, type='POST', data=files)
+        return r
+
+    def get_contents(self, collection_scope, collection_name, edge_name):
+        """
+        Synchronize the contents from the Head service.
+
+        :param collection_scope: The scope of the collection.
+        :param collection_name: The name of the collection.
+        :param edge_name: The edge name.
+
+        :raise exceptions if it's not got successfully.
+        """
+        path = self.CATALOG_BASEURL
+
+        url = self.build_url(self.host, path=os.path.join(path, 'contents/%s/%s/%s' % (collection_scope, collection_name, edge_name)))
 
         r = self.get_request_response(url, type='GET')
         return r

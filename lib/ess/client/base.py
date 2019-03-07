@@ -103,6 +103,8 @@ class BaseRestClient(object):
             if result is not None:
                 if result.status_code == HTTP_STATUS_CODE.OK:
                     return json.loads(result.text)
+                elif result.status_code == HTTP_STATUS_CODE.NotFound:
+                    raise exceptions.NoObject("Not found object")
                 else:
                     try:
                         data = json.loads(result.text)
