@@ -44,17 +44,6 @@ class Requests(ESSController):
         header('Content-Type', 'application/x-json-stream')
         params = input()
 
-        status = None
-        edge_name = None
-        edge_id = None
-        if 'status' in params:
-            status = params['status']
-        if 'edge_name' in params:
-            edge_name = params['edge_name']
-        if 'edge_id' in params:
-            edge_id = int(params['edge_id'])
-        reqs = get_requests(status=status, edge_name=edge_name, edge_id=edge_id)
-
         try:
             status = None
             edge_name = None
@@ -67,7 +56,6 @@ class Requests(ESSController):
                 edge_id = int(params['edge_id'])
             reqs = get_requests(status=status, edge_name=edge_name, edge_id=edge_id)
         except exceptions.NoObject as error:
-            raise error
             raise self.generate_http_response(HTTP_STATUS_CODE.NotFound, exc_cls=error.__class__.__name__, exc_msg=error)
         except exceptions.ESSException as error:
             raise self.generate_http_response(HTTP_STATUS_CODE.InternalError, exc_cls=error.__class__.__name__, exc_msg=error)

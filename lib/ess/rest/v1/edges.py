@@ -48,7 +48,6 @@ class Edges(ESSController):
                 status = params['status']
             edges = get_edges(status=status)
         except exceptions.NoObject as error:
-            raise error
             raise self.generate_http_response(HTTP_STATUS_CODE.NotFound, exc_cls=error.__class__.__name__, exc_msg=error)
         except exceptions.ESSException as error:
             raise self.generate_http_response(HTTP_STATUS_CODE.InternalError, exc_cls=error.__class__.__name__, exc_msg=error)
