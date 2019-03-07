@@ -10,7 +10,7 @@
 
 
 """
-Splitter plugin based ATLAS AthenaMP prefetcher
+Objectstore stager.
 """
 
 import logging
@@ -28,11 +28,12 @@ from ess.daemons.common.plugin_base import PluginBase
 
 class Stager(threading.Thread):
 
-    def __init__(self, request_queue, output_queue, logger=None, bucket_name=None,
+    def __init__(self, request_queue, output_queue, id=0, logger=None, bucket_name=None,
                  access_key=None, secret_key=None, hostname=None, port=None, is_secure=None,
                  signed_url=True, lifetime=3600):
 
         threading.Thread.__init__(self)
+        self.name = '%s-%s' % (self.__class__.__name__, id)
         if logger:
             self.logger = logger
         else:
@@ -92,7 +93,7 @@ class Stager(threading.Thread):
                 key = Key(self.bucket, os.path.basename(req['pfn']))
                 key.set_contents_from_filename(req['pfn'])
 
-            if key.size == req['size']:
+            if key.size == req['pfn_size']:
                 self.logger.debug("Successfully staged out %s" % req['pfn'])
                 if self.signed_url:
                     req['pfn'] = key.generate_url(self.lifetime, method='GET')
@@ -104,7 +105,7 @@ class Stager(threading.Thread):
                 return req
             else:
                 self.logger.debug("Failed to stage out %s: size mismatch(local size: %s, remote size: %s)" % (
-                                  req['pfn'], req['size'], key.size))
+                                  req['pfn'], req['pfn_size'], key.size))
         except Exception as error:
             self.logger.error("Failed to stageout request(%s): %s, %s" % (req, error, traceback.format_exc()))
 
@@ -170,6 +171,7 @@ class ObjectStoreStager(PluginBase):
         for i in range(self.num_threads):
             stager = Stager(self.request_queue,
                             self.output_queue,
+                            id=i,
                             logger=self.logger,
                             bucket_name=self.bucket_name,
                             access_key=self.access_key,

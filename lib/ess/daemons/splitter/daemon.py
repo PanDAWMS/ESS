@@ -9,7 +9,6 @@
 # - Wen Guan, <wen.guan@cern.ch>, 2019
 
 
-import signal
 import time
 import traceback
 import Queue
@@ -90,7 +89,10 @@ class Splitter(BaseDaemon):
     def prepare_to_split_files(self, req):
         if req.granularity_type == GranularityType.PARTIAL:
             coll_id = req.processing_meta['coll_id']
-            files = get_contents_by_edge(edge_name=self.resource_name, coll_id=coll_id, content_type=ContentType.FILE)
+            files = get_contents_by_edge(edge_name=self.resource_name,
+                                         coll_id=coll_id,
+                                         content_type=ContentType.FILE,
+                                         status=ContentStatus.PRECACHED)
 
             sub_files = []
             for file in files:
@@ -139,7 +141,7 @@ class Splitter(BaseDaemon):
         """
         update_files = {}
         for file in files:
-            update_files[file['content_id']] = {'status': ContentStatus.SPLITTED,
+            update_files[file['content_id']] = {'status': ContentStatus.TOSTAGEDOUT,
                                                 'pfn_size': file['size'],
                                                 'pfn': file['pfn']}
         update_contents_by_id(update_files)
@@ -148,8 +150,6 @@ class Splitter(BaseDaemon):
         """
         Main run function.
         """
-        signal.signal(signal.SIGTERM, self.stop)
-
         try:
             self.logger.info("Starting main thread")
 

@@ -10,7 +10,6 @@
 
 
 import datetime
-import signal
 import time
 import traceback
 import Queue
@@ -43,6 +42,7 @@ class Stager(BaseDaemon):
             self.send_messaging = True
         else:
             self.send_messaging = False
+        self.logger.info("Send messaging is defined as: %s" % self.send_messaging)
 
     def start_stagers(self):
         if 'stager' in self.plugins:
@@ -80,7 +80,7 @@ class Stager(BaseDaemon):
         """
         Get tasks to stage out.
         """
-        files = get_contents_by_edge(edge_name=self.resource_name, status=ContentStatus.SPLITED, content_type=None)
+        files = get_contents_by_edge(edge_name=self.resource_name, status=ContentStatus.TOSTAGEDOUT, content_type=None)
 
         update_files = {}
         for file in files:
@@ -89,28 +89,33 @@ class Stager(BaseDaemon):
 
         for file in files:
             to_stageout = {'content_id': file.content_id,
+                           'coll_id': file.coll_id,
                            'pfn_size': file.pfn_size,
+                           'scope': file.scope,
+                           'name': file.name,
+                           'min_id': file.min_id,
+                           'max_id': file.max_id,
                            'pfn': file.pfn}
             self.request_queue.put(to_stageout)
 
-    def finish_stager_tasks(self, files):
+    def finish_stager_tasks(self):
         """
         Finish processing the finished tasks, for example, update db status.
         """
 
         update_files = {}
         messages = []
-        while not self.request_queue.empty():
-            file = self.request_queue.get()
+        while not self.finished_queue.empty():
+            file = self.finished_queue.get()
             update_files[file['content_id']] = {'status': ContentStatus.AVAILABLE,
                                                 'pfn_size': file['pfn_size'],
                                                 'pfn': file['pfn']}
             msg = {'event_type': 'FILE_AVAILABLE',
-                   'payload': {'scope': file.scope,
-                               'name': file.name,
-                               'startEvent': file.min_id,
-                               'lastEvent': file.max_id,
-                               'pfn': file.pfn},
+                   'payload': {'scope': file['scope'],
+                               'name': file['name'],
+                               'startEvent': file['min_id'],
+                               'lastEvent': file['max_id'],
+                               'pfn': file['pfn']},
                    'created_at': date_to_str(datetime.datetime.utcnow())}
             messages.append(msg)
 
@@ -125,15 +130,14 @@ class Stager(BaseDaemon):
         """
         Main run function.
         """
-        signal.signal(signal.SIGTERM, self.stop)
-
         try:
             self.logger.info("Starting main thread")
 
             self.load_plugins()
 
             self.start_stagers()
-            self.start_messaging_broker()
+            if self.send_messaging:
+                self.start_messaging_broker()
 
             while not self.graceful_stop.is_set():
                 try:
@@ -157,7 +161,8 @@ class Stager(BaseDaemon):
         self.stop_stagers()
         while(self.is_stagers_alive()):
             time.sleep(1)
-        self.stop_messaging_broker()
+        if self.send_messaging:
+            self.stop_messaging_broker()
 
 
 if __name__ == '__main__':
