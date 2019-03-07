@@ -73,11 +73,19 @@ class RucioPreCacher(PluginBase):
                         'name': file['name'],
                         'min_id': 1,
                         'max_id': file['events'],
-                        'status': ContentStatus.AVAILABLE if downloaded_file and downloaded_file['clientState'] == 'ALREADY_DONE' else ContentStatus.NEW,
+                        'status': ContentStatus.PRECACHED if downloaded_file and downloaded_file['clientState'] == 'ALREADY_DONE' else ContentStatus.NEW,
                         'size': file['bytes'],
                         'md5': downloaded_file['md5'] if downloaded_file else None,
                         'adler32': downloaded_file['adler32'] if downloaded_file else None,
                         'pfn': downloaded_file['dest_file_path'] if downloaded_file else None
+
                         }
+            """
+            if ret_file['status'] == ContentStatus.AVAILABLE:
+                    if  req.granularity_type == GranularityType.PARTIAL:
+                        ret_file['status'] = ContentStatus.PRECACHED
+                    elif req.granularity_type == GranularityType.FILE:
+                        ret_file['status'] = ContentStatus.TOSTAGEDOUT
+            """
             ret_files.append(ret_file)
         return ret_files
