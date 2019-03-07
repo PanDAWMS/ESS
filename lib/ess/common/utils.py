@@ -59,6 +59,25 @@ def date_to_str(date):
     return datetime.datetime.strftime(date, DATE_FORMAT) if date else None
 
 
+def has_config():
+    """
+    check whether there is a config file
+    """
+    if os.environ.get('ESS_CONFIG', None):
+        configfile = os.environ.get('ESS_CONFIG', None)
+        if configfile and os.path.exists(configfile):
+            return True
+    else:
+        configfiles = ['%s/etc/ess/ess.cfg' % os.environ.get('ESS_HOME', ''),
+                       '/etc/ess/ess.cfg',
+                       '%s/etc/ess/ess.cfg' % os.environ.get('VIRTUAL_ENV', '')]
+
+        for configfile in configfiles:
+            if configfile and os.path.exists(configfile):
+                return True
+    return False
+
+
 def check_rest_host():
     """
     Function to check whether rest host is defined in config.
@@ -78,6 +97,35 @@ def get_rest_host():
     Function to get rest host
     """
     return config_get('rest', 'host')
+
+
+def check_user_proxy():
+    """
+    Check whether there is a user proxy.
+    """
+    if 'X509_USER_PROXY' in os.environ:
+        client_proxy = os.environ['X509_USER_PROXY']
+    else:
+        client_proxy = '/tmp/x509up_u%d' % os.geteuid()
+
+    if not os.path.exists(client_proxy):
+        return False
+    else:
+        return True
+
+
+def check_database():
+    """
+    Function to check whether database is defined in config.
+    To be used to decide whether to skip some test functions.
+
+    :returns True: if database.default is available. Otherwise False.
+    """
+    if config_has_option('database', 'default'):
+        database = config_get('database', 'default')
+        if database:
+            return True
+    return False
 
 
 def run_process(cmd, stdout=None, stderr=None):
