@@ -13,6 +13,7 @@
 Messaging sender plugin
 """
 
+import logging
 import json
 import random
 import socket
@@ -25,8 +26,27 @@ import stomp
 from ess.daemons.common.plugin_base import PluginBase
 
 
+class MessagingListener(stomp.ConnectionListener):
+    '''
+    Messaging Listener
+    '''
+    def __init__(self, broker):
+        '''
+        __init__
+        '''
+        self.__broker = broker
+        self.logger = logging.getLogger(self.__class__.__name__)
+
+    def on_error(self, headers, body):
+        '''
+        Error handler
+        '''
+        self.logger.error('[broker] [%s]: %s', self.__broker, body)
+
+
 class MessagingSender(PluginBase, threading.Thread):
     def __init__(self, **kwargs):
+        threading.Thread.__init__(self)
         super(MessagingSender, self).__init__(**kwargs)
 
         self.setup_logger()
@@ -40,7 +60,7 @@ class MessagingSender(PluginBase, threading.Thread):
         if not hasattr(self, 'port'):
             raise Exception('port is required but not defined.')
         if not hasattr(self, 'vhost'):
-            raise Exception('vhost is required but not defined.')
+            self.vhost = None
         if not hasattr(self, 'destination'):
             raise Exception('destination is required but not defined.')
         if not hasattr(self, 'broker_timeout'):
@@ -74,13 +94,16 @@ class MessagingSender(PluginBase, threading.Thread):
                                       vhost=self.vhost,
                                       keepalive=True,
                                       timeout=self.broker_timeout)
+            conn.set_listener('message-sender', MessagingListener(conn.transport._Transport__host_and_ports[0]))
             self.conns.append(conn)
 
     def send_message(self, msg):
         conn = random.sample(self.conns, 1)[0]
         if not conn.is_connected():
+            conn.start()
             conn.connect(self.username, self.password, wait=True)
 
+        self.logger.debug("Sending message: %s" % msg)
         conn.send(body=json.dumps({'event_type': str(msg['event_type']).lower(),
                                    'payload': msg['payload'],
                                    'created_at': str(msg['created_at'])}),
