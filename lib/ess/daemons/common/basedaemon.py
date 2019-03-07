@@ -10,7 +10,6 @@
 
 
 import logging
-import signal
 import threading
 import traceback
 import Queue
@@ -20,7 +19,7 @@ from concurrent import futures
 from threading import Thread
 
 from ess.common.constants import Sections
-from ess.common.config import config_has_section, config_list_options, config_get
+from ess.common.config import config_has_section, config_has_option, config_list_options, config_get
 from ess.common.exceptions import ESSException, DaemonPluginError
 from ess.common.utils import setup_logging
 
@@ -36,6 +35,7 @@ class BaseDaemon(Thread):
     def __init__(self, num_threads=1, **kwargs):
         super(BaseDaemon, self).__init__()
 
+        self.name = self.__class__.__name__
         self.num_threads = num_threads
         self.graceful_stop = threading.Event()
         self.executors = futures.ThreadPoolExecutor(max_workers=num_threads)
@@ -70,6 +70,11 @@ class BaseDaemon(Thread):
 
     def get_resouce_name(self):
         return config_get(Sections.ResourceManager, 'resource_name')
+
+    def get_head_service(self):
+        if config_has_option(Sections.ResourceManager, 'head_service'):
+            return config_get(Sections.ResourceManager, 'head_service')
+        return None
 
     def load_plugin_attributes(self, name, plugin):
         """
@@ -120,9 +125,9 @@ class BaseDaemon(Thread):
         if 'messaging' in self.plugins:
             try:
                 self.logger.info("Starting messaging broker plugin %s" % self.plugins['messaging'])
-                self.plugins['messaging'].set_request_queues(self.messaging_queue)
+                self.plugins['messaging'].set_request_queue(self.messaging_queue)
                 self.plugins['messaging'].start()
-                self.logger.info("Messaging broker plugin %s started" % self.plugins['stager'])
+                self.logger.info("Messaging broker plugin %s started" % self.plugins['messaging'])
             except Exception as error:
                 self.logger.error("Messaging broker plugin throws an exception: %s, %s" % (error, traceback.format_exc()))
                 raise DaemonPluginError("Messaging broker plugin throws an exception: %s" % (error))
@@ -178,8 +183,9 @@ class BaseDaemon(Thread):
                     except Exception as error:
                         self.logger.critical(log_prefix + "Caught an exception: %s\n%s" % (str(error), traceback.format_exc()))
 
-                    self.logger.info(log_prefix + "Put task to finished queue: %s" % task)
-                    self.finished_tasks.put(task)
+                    if task:
+                        self.logger.info(log_prefix + "Put task to finished queue: %s" % task)
+                        self.finished_tasks.put(task)
                 else:
                     self.graceful_stop.wait(1)
             except Exception as error:
@@ -200,8 +206,6 @@ class BaseDaemon(Thread):
         """
         Main run function.
         """
-        signal.signal(signal.SIGTERM, self.stop)
-
         try:
             self.logger.info("Starting main thread")
 
