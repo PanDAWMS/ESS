@@ -9,25 +9,57 @@
 # - Wen Guan, <wen.guan@cern.ch>, 2019
 
 
+import json
 from traceback import format_exc
 
-from web import application, header, input
+from web import application, header, input, data
 
 
 from ess.common import exceptions
 from ess.common.constants import HTTP_STATUS_CODE
 from ess.rest.v1.controller import ESSController
-from ess.core.catalog import get_content_best_match
+from ess.core.catalog import get_collection, add_contents, get_content_best_match, get_contents_by_edge
 from ess.orm.constants import ContentStatus
 
 
 URLS = (
-    '/(.*)/(.*)', 'Catalog',
+    'collection/(.*)/(.*)', 'CatalogCollection',
+    'content/(.*)/(.*)', 'CatalogContent',
+    'contents/(.*)/(.*)/(.*)', 'CatalogContents',
 )
 
 
-class Catalog(ESSController):
-    """ Update, get and delete Catalog. """
+class CatalogCollection(ESSController):
+    """ Update, get and delete Catalog collection. """
+
+    def GET(self, scope, name):
+        """ Get collection details about a scope and name.
+        HTTP Success:
+            200 OK
+        HTTP Error:
+            404 Not Found
+            500 InternalError
+        :returns: dictionary of an request.
+        """
+
+        header('Content-Type', 'application/json')
+
+        try:
+            collection = get_collection(scope=scope, name=name)
+        except exceptions.NoObject as error:
+            raise self.generate_http_response(HTTP_STATUS_CODE.NotFound, exc_cls=error.__class__.__name__, exc_msg=error)
+        except exceptions.ESSException as error:
+            raise self.generate_http_response(HTTP_STATUS_CODE.InternalError, exc_cls=error.__class__.__name__, exc_msg=error)
+        except Exception as error:
+            print(error)
+            print(format_exc())
+            raise self.generate_http_response(HTTP_STATUS_CODE.InternalError, exc_cls=exceptions.CoreException.__name__, exc_msg=error)
+
+        raise self.generate_http_response(HTTP_STATUS_CODE.OK, data=collection.to_dict())
+
+
+class CatalogContent(ESSController):
+    """ Update, get and delete Catalog content. """
 
     def GET(self, scope, name):
         """ Get content details about a scope and name.
@@ -78,6 +110,68 @@ class Catalog(ESSController):
             raise self.generate_http_response(HTTP_STATUS_CODE.InternalError, exc_cls=exceptions.CoreException.__name__, exc_msg=error)
 
         raise self.generate_http_response(HTTP_STATUS_CODE.OK, data=content.to_dict())
+
+
+class CatalogContents(ESSController):
+    """ Update and get Catalog contents. """
+
+    def GET(self, collection_scope, collection_name, edge_name):
+        """ Get list of contents in a collection on an edge.
+        HTTP Success:
+            200 OK
+        HTTP Error:
+            404 Not Found
+            500 InternalError
+        :returns: dictionary of an request.
+        """
+
+        header('Content-Type', 'application/json')
+
+        try:
+            contents = get_contents_by_edge(edge_name=edge_name,
+                                            collection_scope=collection_scope,
+                                            collection_name=collection_name)
+            for content in contents:
+                if content.status != ContentStatus.AVAILABLE:
+                    content.pfn_size = 0
+                    content.pfn = None
+        except exceptions.NoObject as error:
+            raise self.generate_http_response(HTTP_STATUS_CODE.NotFound, exc_cls=error.__class__.__name__, exc_msg=error)
+        except exceptions.ESSException as error:
+            raise self.generate_http_response(HTTP_STATUS_CODE.InternalError, exc_cls=error.__class__.__name__, exc_msg=error)
+        except Exception as error:
+            print(error)
+            print(format_exc())
+            raise self.generate_http_response(HTTP_STATUS_CODE.InternalError, exc_cls=exceptions.CoreException.__name__, exc_msg=error)
+
+        raise self.generate_http_response(HTTP_STATUS_CODE.OK, data=[c.to_dict() for c in contents])
+
+    def POST(self, collection_scope, collection_name, edge_name):
+        """ Add or update list of contents in a collection on an edge.
+        HTTP Success:
+            200 OK
+        HTTP Error:
+            404 Not Found
+            500 InternalError
+        :returns: dictionary of an request.
+        """
+
+        header('Content-Type', 'application/json')
+
+        try:
+            json_data = data
+            files = json.loads(json_data)
+            add_contents(collection_scope, collection_name, edge_name, files)
+        except exceptions.DuplicatedObject as error:
+            raise self.generate_http_response(HTTP_STATUS_CODE.NotFound, exc_cls=error.__class__.__name__, exc_msg=error)
+        except exceptions.ESSException as error:
+            raise self.generate_http_response(HTTP_STATUS_CODE.InternalError, exc_cls=error.__class__.__name__, exc_msg=error)
+        except Exception as error:
+            print(error)
+            print(format_exc())
+            raise self.generate_http_response(HTTP_STATUS_CODE.InternalError, exc_cls=exceptions.CoreException.__name__, exc_msg=error)
+
+        raise self.generate_http_response(HTTP_STATUS_CODE.OK, data={'status': 0, 'message': 'added successfully'})
 
 
 """----------------------
