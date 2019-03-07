@@ -61,8 +61,9 @@ class TestRequest(unittest.TestCase):
         assert_equal(request.priority, properties['priority'])
         assert_equal(request.edge_id, properties['edge_id'])
         assert_equal(str(request.status), properties['status'])
-        assert_equal(str(request.request_meta), str(properties['request_meta']))
-        assert_equal(str(request.processing_meta), str(properties['processing_meta']))
+        assert_equal(str(request.request_meta['taskid']), str(properties['request_meta']['taskid']))
+        assert_equal(str(request.request_meta['job_id']), str(properties['request_meta']['job_id']))
+        # assert_equal(str(request.processing_meta), str(properties['processing_meta']))
         assert_equal(request.errors, properties['errors'])
 
         request_id1 = add_request(**properties)

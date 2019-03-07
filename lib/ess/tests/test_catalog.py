@@ -177,6 +177,7 @@ class TestCatalogCore(unittest.TestCase):
             get_collection_replicas(properties_coll['scope'], properties_coll['name'], edge_name)
 
         delete_edge(edge_name)
+        delete_collection(scope=properties_coll['scope'], name=properties_coll['name'], coll_id=collection_id)
 
     def test_create_and_check_for_content(self):
         """ Catalog (CORE): Test the creation, query, and deletion of a Content """
