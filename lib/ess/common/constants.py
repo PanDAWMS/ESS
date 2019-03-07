@@ -18,9 +18,11 @@ class Sections:
     Assigner = 'assigner'
     BaseDaemon = 'basedaemon'
     Broker = 'broker'
+    Finisher = 'finisher'
     PreCacher = 'precacher'
     ResourceManager = 'resourcemanager'
     Splitter = 'splitter'
+    Stager = 'stager'
 
 
 class HTTP_STATUS_CODE:
