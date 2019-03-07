@@ -24,6 +24,7 @@ properties = {
     'request_meta': {'jeditaskid': 16986388, 'site': 'CERN'},
 }
 
+"""
 properties = {
     'scope': 'mc15_13TeV',
     'name': 'EVNT.06402143._000021.pool.root.1',
@@ -35,6 +36,7 @@ properties = {
     'status': 'NEW',
     'request_meta': {'jeditaskid': 16986388, 'site': 'CERN'},
 }
+"""
 
 client = Client(host='https://aipanda182.cern.ch:8443')
 
