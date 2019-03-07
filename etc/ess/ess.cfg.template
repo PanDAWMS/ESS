@@ -27,10 +27,12 @@ pool_reset_on_return=rollback
 host = https://aipanda182.cern.ch:8443
 
 [main]
-daemons = resourcemanager, broker, assigner, precacher, splitter
+# name = ESS_edge_aipanda182
+daemons = resourcemanager, broker, assigner, precacher, splitter, stager, finisher
 
 [resourcemanager]
-resource_name = ESS_edge_aipanda
+resource_name = ESS_edge_aipanda182
+head_service = https://aipanda182.cern.ch:8443
 total_space = 4T
 edge_type = HEAD
 is_independent = True
@@ -60,16 +62,36 @@ plugin.splitter.num_threads = 3
 plugin.splitter.log_dir  = /afs/cern.ch/user/w/wguan/workdisk/ESS_cache/logs/
 plugin.splitter.splitter_template = /afs/cern.ch/user/w/wguan/workdisk/ESS/etc/ess/templates/athenaMP_prefetcher.sh.template
 plugin.splitter.output_prefix = splitted_eventranges.pool.root
-# required to start AthenaMP prefetcher, should put a file somewhere even we don't use it.
+# a file needed to start AthenaMP prefetcher
 plugin.splitter.default_input = /afs/cern.ch/user/w/wguan/workdisk/ESS_cache/mc16_13TeV.450525.MadGraphPythia8EvtGen_A14NNPDF23LO_X2000tohh_bbtautau_hadhad.merge.EVNT.e7244_e5984_tid16986378_00/EVNT.16986378._000007.pool.root.1
 
-plugin.stager = ess.daemons.splitter.object_store_stager.ObjectStoreStager
+[stager]
+plugin.stager = ess.daemons.stager.object_store_stager.ObjectStoreStager
+plugin.stager.num_threads = 7
 plugin.stager.hostname = s3.cern.ch
 plugin.stager.port = 443
-plugin.stager.access_key = **
-plugin.stager.secret_key = *******
+plugin.stager.access_key = *****
+plugin.stager.secret_key = ****
 plugin.stager.is_secure = true
 plugin.stager.bucket_name = atlas-ess
 plugin.stager.signed_url = true
 plugin.stager.lifetime = 604800
 
+send_messaging = false
+plugin.messaging = ess.daemons.common.messaging_sender.MessagingSender
+plugin.messaging.brokers = atlas-test-mb.cern.ch
+plugin.messaging.port = 61023
+plugin.messaging.broker_timeout = 10
+plugin.messaging.destination = /queue/atlas.ess
+plugin.messaging.username = ****
+plugin.messaging.password = ******
+
+[finisher]
+send_messaging = true
+plugin.messaging = ess.daemons.common.messaging_sender.MessagingSender
+plugin.messaging.brokers = atlas-test-mb.cern.ch
+plugin.messaging.port = 61023
+plugin.messaging.broker_timeout = 10
+plugin.messaging.destination = /queue/atlas.ess
+plugin.messaging.username = *****
+plugin.messaging.password = *****
