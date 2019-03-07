@@ -387,7 +387,7 @@ def add_contents(collection_scope, collection_name, edge_name, files, session=No
                         pfn_size=file['pfn_size'] if 'pfn_size' in file else 0,
                         pfn=file['pfn'] if 'pfn' in file else None,
                         object_metadata=file['object_metadata'] if 'object_metadata' in file else None,
-                        session=None)
+                        session=session)
         except exceptions.DuplicatedObject:
             pass
 
@@ -546,46 +546,22 @@ def get_content_best_match(scope, name, min_id=None, max_id=None, edge_name=None
         if status and (isinstance(status, str) or isinstance(status, unicode)):
             status = ContentStatus.from_sym(str(status))
 
+        query = session.query(models.CollectionContent).filter_by(scope=scope, name=name)
+        if status:
+            query = query.filter_by(status=status)
         if edge_id:
-            if min_id is not None and max_id is not None:
-                if status:
-                    query = session.query(models.CollectionContent).filter_by(scope=scope, name=name, edge_id=edge_id, status=status)
-                else:
-                    query = session.query(models.CollectionContent).filter_by(scope=scope, name=name, edge_id=edge_id)
-                query = query.filter(and_(CollectionContent.min_id <= min_id, CollectionContent.max_id >= max_id))
+            query = query.filter_by(edge_id=edge_id)
 
-                content = None
-                for row in query:
-                    if (not content) or (content['max_id'] - content['min_id'] > row['max_id'] - row['min_id']):
-                        content = row
-                if content is None:
-                    raise sqlalchemy.orm.exc.NoResultFound()
-            else:
-                content_type = ContentType.FILE
-                if status:
-                    content = session.query(models.CollectionContent).filter_by(scope=scope, name=name, content_type=content_type, edge_id=edge_id, status=status).one()
-                else:
-                    content = session.query(models.CollectionContent).filter_by(scope=scope, name=name, content_type=content_type, edge_id=edge_id).one()
+        if min_id is not None and max_id is not None:
+            contents = query.filter(and_(CollectionContent.min_id <= min_id, CollectionContent.max_id >= max_id)).all()
+            content = None
+            for row in contents:
+                if (not content) or (content['max_id'] - content['min_id'] > row['max_id'] - row['min_id']):
+                    content = row
+            if content is None:
+                raise sqlalchemy.orm.exc.NoResultFound()
         else:
-            if min_id is not None and max_id is not None:
-                if status:
-                    query = session.query(models.CollectionContent).filter_by(scope=scope, name=name, status=status)
-                else:
-                    query = session.query(models.CollectionContent).filter_by(scope=scope, name=name)
-                query = query.filter(and_(CollectionContent.min_id <= min_id, CollectionContent.max_id >= max_id))
-
-                content = None
-                for row in query:
-                    if (not content) or (content['max_id'] - content['min_id'] > row['max_id'] - row['min_id']):
-                        content = row
-                if content is None:
-                    raise sqlalchemy.orm.exc.NoResultFound()
-            else:
-                content_type = ContentType.FILE
-                if status:
-                    content = session.query(models.CollectionContent).filter_by(scope=scope, name=name, content_type=content_type, status=status).one()
-                else:
-                    content = session.query(models.CollectionContent).filter_by(scope=scope, name=name, content_type=content_type).one()
+            content = query.filter_by(content_type=ContentType.FILE).one()
 
         content['content_type'] = content.content_type
         content['status'] = content.status
@@ -595,8 +571,8 @@ def get_content_best_match(scope, name, min_id=None, max_id=None, edge_name=None
 
 
 @read_session
-def get_contents_by_edge(edge_name, edge_id=None, status=None, coll_id=None, content_type=ContentType.FILE,
-                         limit=None, session=None):
+def get_contents_by_edge(edge_name, edge_id=None, status=None, coll_id=None, content_type=None,
+                         collection_scope=None, collection_name=None, limit=None, session=None):
     """
     Get a collection content or raise a NoObject exception.
 
@@ -616,6 +592,8 @@ def get_contents_by_edge(edge_name, edge_id=None, status=None, coll_id=None, con
     try:
         if not edge_id:
             edge_id = get_edge_id(edge_name=edge_name, session=session)
+        if not coll_id and (collection_scope and collection_name):
+            coll_id = get_collection_id(collection_scope, collection_name)
 
         query = session.query(models.CollectionContent).filter_by(edge_id=edge_id)
         if status:
