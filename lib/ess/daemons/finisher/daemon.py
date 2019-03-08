@@ -10,7 +10,6 @@
 
 
 import datetime
-import json
 import time
 import traceback
 
@@ -111,7 +110,6 @@ class Finisher(BaseDaemon):
                                            'name': req.name,
                                            'metadata': req.request_metadata},
                                'created_at': date_to_str(datetime.datetime.utcnow())}
-                        self.logger.info("Sending a message to message broker: %s" % json.dumps(msg))
                         self.messaging_queue.put(msg)
                 else:
                     self.logger.info('Not all files are available for request(%s): %s' % (req.request_id, items))
@@ -143,7 +141,6 @@ class Finisher(BaseDaemon):
                                            'name': req.name,
                                            'metadata': req.request_meta},
                                'created_at': date_to_str(datetime.datetime.utcnow())}
-                        self.logger.info("Sending a message to message broker: %s" % json.dumps(msg))
                         self.messaging_queue.put(msg)
                 else:
                     self.logger.info('Not all partial files are available for request(%s): %s' % (req.request_id, items))

@@ -25,6 +25,8 @@ import stomp
 
 from ess.daemons.common.plugin_base import PluginBase
 
+logging.getLogger('stomp').setLevel(logging.CRITICAL)
+
 
 class MessagingListener(stomp.ConnectionListener):
     '''
@@ -103,7 +105,7 @@ class MessagingSender(PluginBase, threading.Thread):
             conn.start()
             conn.connect(self.username, self.password, wait=True)
 
-        self.logger.debug("Sending message: %s" % msg)
+        self.logger.debug("Sending message to message broker: %s" % msg)
         conn.send(body=json.dumps({'event_type': str(msg['event_type']).lower(),
                                    'payload': msg['payload'],
                                    'created_at': str(msg['created_at'])}),
@@ -119,7 +121,6 @@ class MessagingSender(PluginBase, threading.Thread):
                 if not self.request_queue.empty():
                     msg = self.request_queue.get(False)
                     if msg:
-                        self.logger.debug("Got a message: %s" % msg)
                         self.send_message(msg)
                 else:
                     time.sleep(1)
