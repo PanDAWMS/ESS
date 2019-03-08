@@ -41,14 +41,14 @@ class AtlasPrefetcher(threading.Thread):
             self._stop = threading.Event()
             try:
                 self.__messageSrv = yampl.ServerSocket(socketname, context)
-            except:
+            except:  # noqa: B901
                 self.logger.debug("Exception: failed to start yampl server socket: %s" % traceback.format_exc())
 
         def send(self, message):
             try:
                 self.__messageSrv.send_raw(message)
                 self.num_messages_required -= 1
-            except:
+            except:  # noqa: B901
                 self.logger.debug("Exception: failed to send yampl message: %s" % traceback.format_exc())
 
         def stop(self):
@@ -79,7 +79,7 @@ class AtlasPrefetcher(threading.Thread):
                             self.num_messages_required += 1
                         else:
                             self.messageQ.put(buf)
-            except:
+            except:  # noqa: B901
                 self.logger.debug("Exception: Message Thread failed: %s" % traceback.format_exc())
                 if self.__messageSrv:
                     del self.__messageSrv

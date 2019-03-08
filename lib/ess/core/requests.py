@@ -64,8 +64,8 @@ def add_request(scope, name, data_type=DataType.DATASET, granularity_type=Granul
 
     try:
         new_request.save(session=session)
-    except IntegrityError:
-        raise exceptions.DuplicatedObject('Request %s:%s already exists!' % (scope, name))
+    except IntegrityError as error:
+        raise exceptions.DuplicatedObject('Request %s:%s already exists!: %s' % (scope, name, error))
     except DatabaseError as error:
         raise exceptions.DatabaseException(error.args)
 
@@ -100,8 +100,8 @@ def update_request(request_id, parameters, session=None):
             parameters['status'] = RequestStatus.from_sym(str(parameters['status']))
 
         request = session.query(models.Request).filter_by(request_id=request_id).one()
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Request %s cannot be found' % request_id)
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Request %s cannot be found: %s' % (request_id, error))
 
     try:
         request.update(parameters)
@@ -137,8 +137,8 @@ def get_request(scope=None, name=None, request_id=None, request_meta=None, sessi
         request['granularity_type'] = request.granularity_type
         request['status'] = request.status
         return request
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('request %s:%s(id:%s,meta:%s) cannot be found' % (scope, name, request_id, request_meta))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('request %s:%s(id:%s,meta:%s) cannot be found: %s' % (scope, name, request_id, request_meta, error))
 
 
 @read_session
@@ -166,8 +166,8 @@ def get_requests_by_edge(edge_name, edge_id=None, session=None):
             request['granularity_type'] = request.granularity_type
             request['status'] = request.status
         return requests
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('No requests at %s' % (edge_name))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('No requests at %s: %s' % (edge_name, error))
 
 
 @read_session
@@ -208,8 +208,8 @@ def get_requests(status=None, edge_name=None, edge_id=None, session=None):
             request['granularity_type'] = request.granularity_type
             request['status'] = request.status
         return requests
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Cannot find request with status: %s' % (status))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Cannot find request with status: %s, %s' % (status, error))
 
 
 @transactional_session
@@ -225,5 +225,5 @@ def delete_request(request_id, session=None):
 
     try:
         session.query(models.Request).filter_by(request_id=request_id).delete()
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Request %s cannot be found' % request_id)
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Request %s cannot be found: %s' % (request_id, error))

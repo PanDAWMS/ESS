@@ -69,14 +69,14 @@ def destory_everything(echo=True):
         try:
             print str(DropConstraint(fkc)) + ';'
             conn.execute(DropConstraint(fkc))
-        except:
+        except:  # noqa: B901
             print traceback.format_exc()
 
     for table in tbs:
         try:
             print str(DropTable(table)).strip() + ';'
             conn.execute(DropTable(table))
-        except:
+        except:  # noqa: B901
             print traceback.format_exc()
 
     trans.commit()

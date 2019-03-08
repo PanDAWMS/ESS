@@ -86,7 +86,7 @@ def mysql_convert_decimal_to_float(dbapi_conn, connection_rec):
     try:
         import MySQLdb.converters  # pylint: disable=import-error
         from MySQLdb.constants import FIELD_TYPE  # pylint: disable=import-error
-    except:
+    except:  # noqa: B901
         raise ESSException('Trying to use MySQL without mysql-python installed!')
     conv = MySQLdb.converters.conversions.copy()
     conv[FIELD_TYPE.DECIMAL] = float
@@ -104,7 +104,7 @@ def psql_convert_decimal_to_float(dbapi_conn, connection_rec):
 
     try:
         import psycopg2.extensions  # pylint: disable=import-error
-    except:
+    except:  # noqa: B901
         raise ESSException('Trying to use PostgreSQL without psycopg2 installed!')
 
     DEC2FLOAT = psycopg2.extensions.new_type(psycopg2.extensions.DECIMAL.values,
@@ -138,7 +138,7 @@ def get_engine(echo=True):
         for param, param_type in config_params:
             try:
                 params[param] = param_type(config_get(DATABASE_SECTION, param))
-            except:
+            except:  # noqa: B901
                 pass
         _ENGINE = create_engine(sql_connection, **params)
         if 'mysql' in sql_connection:
@@ -255,14 +255,14 @@ def read_session(function):
             except DatabaseError as error:
                 session.rollback()  # pylint: disable=maybe-no-member
                 raise DatabaseException(str(error))
-            except:
+            except:  # noqa: B901
                 session.rollback()  # pylint: disable=maybe-no-member
                 raise
             finally:
                 session.remove()
         try:
             return function(*args, **kwargs)
-        except:
+        except:  # noqa: B901
             raise
     new_funct.__doc__ = function.__doc__
     return new_funct
@@ -300,7 +300,7 @@ def stream_session(function):
                 print(error)
                 session.rollback()  # pylint: disable=maybe-no-member
                 raise DatabaseException(str(error))
-            except:
+            except:  # noqa: B901
                 session.rollback()  # pylint: disable=maybe-no-member
                 raise
             finally:
@@ -309,7 +309,7 @@ def stream_session(function):
             try:
                 for row in function(*args, **kwargs):
                     yield row
-            except:
+            except:  # noqa: B901
                 raise
     new_funct.__doc__ = function.__doc__
     return new_funct
@@ -337,7 +337,7 @@ def transactional_session(function):
                 print(error)
                 session.rollback()  # pylint: disable=maybe-no-member
                 raise DatabaseException(str(error))
-            except:
+            except:  # noqa: B901
                 session.rollback()  # pylint: disable=maybe-no-member
                 raise
             finally:
