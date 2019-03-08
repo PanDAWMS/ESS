@@ -24,7 +24,7 @@ before_script:
   - if [[ $FLAKE8_CONFIG != ".flake8" ]]; then rm .flake8; fi
   - flake8 --config $FLAKE8_CONFIG lib/ess/
 script:
-  - bash tools/test/test.sh
+  - bash tools/test/test_travis.sh
 matrix:
   include:
   - python: 2.7

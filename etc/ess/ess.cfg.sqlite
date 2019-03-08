@@ -1,0 +1,97 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# Authors:
+# - Wen Guan, <wen.guan@cern.ch>, 2019
+
+[common]
+#logdir = /var/log/ess
+loglevel = DEBUG
+
+
+[database]
+#default = mysql://ess:ess@localhost/ess
+default = sqlite:////tmp/ess.db
+#default = oracle://_____________:___________@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=_________)(PORT=______))(ADDRESS=(PROTOCOL=TCP)(HOST=_________)(PORT=_____))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=__________)))
+#default = oracle://_____________:___________@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=______))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=_____________)))
+
+# only for cern oracle
+#schema = atlas_ess
+#default = postgresql://ess:ess@localhost/ess
+pool_recycle=3600
+echo=0
+pool_reset_on_return=rollback
+
+#[rest]
+#host = https://aipanda182.cern.ch:8443
+
+[main]
+# name = ESS_edge_aipanda182
+daemons = resourcemanager, broker, assigner, precacher, splitter, stager, finisher
+
+[resourcemanager]
+resource_name = ESS_edge_aipanda182
+head_service = https://aipanda182.cern.ch:8443
+total_space = 4T
+edge_type = HEAD
+is_independent = True
+continent = EU
+country_name = Switzerland
+region_code = EU
+city = Geneva
+longitude = 6.0531664
+latitude = 46.2338323
+
+[broker]
+plugin.datafinder = ess.daemons.broker.rucio_data_finder.RucioDataFinder
+plugin.datafinder.attr1 = value1
+plugin.requestbroker = ess.daemons.broker.simple_request_broker.SimpleRequestBroker
+
+[precacher]
+plugin.precache = ess.daemons.precacher.rucio_localdisk_pre_cacher.RucioPreCacher
+plugin.precache.cache_path = /afs/cern.ch/user/w/wguan/workdisk/ESS_cache
+plugin.precache.no_subdir = false
+#plugin.precache.transfer_timeout = None
+plugin.precache.num_threads = 1
+
+[splitter]
+plugin.splitter = ess.daemons.splitter.atlas_prefetcher_splitter.AtlasPrefetcherSplitter
+plugin.splitter.splitter_name = 'Atlas_EventRange_Prefetcher'
+plugin.splitter.num_threads = 3
+plugin.splitter.log_dir  = /afs/cern.ch/user/w/wguan/workdisk/ESS_cache/logs/
+plugin.splitter.splitter_template = /afs/cern.ch/user/w/wguan/workdisk/ESS/etc/ess/templates/athenaMP_prefetcher.sh.template
+plugin.splitter.output_prefix = splitted_eventranges.pool.root
+# a file needed to start AthenaMP prefetcher
+plugin.splitter.default_input = /afs/cern.ch/user/w/wguan/workdisk/ESS_cache/mc16_13TeV.450525.MadGraphPythia8EvtGen_A14NNPDF23LO_X2000tohh_bbtautau_hadhad.merge.EVNT.e7244_e5984_tid16986378_00/EVNT.16986378._000007.pool.root.1
+
+[stager]
+plugin.stager = ess.daemons.stager.object_store_stager.ObjectStoreStager
+plugin.stager.num_threads = 7
+plugin.stager.hostname = s3.cern.ch
+plugin.stager.port = 443
+plugin.stager.access_key = *****
+plugin.stager.secret_key = ****
+plugin.stager.is_secure = true
+plugin.stager.bucket_name = atlas-ess
+plugin.stager.signed_url = true
+plugin.stager.lifetime = 604800
+
+send_messaging = false
+plugin.messaging = ess.daemons.common.messaging_sender.MessagingSender
+plugin.messaging.brokers = atlas-test-mb.cern.ch
+plugin.messaging.port = 61023
+plugin.messaging.broker_timeout = 10
+plugin.messaging.destination = /queue/atlas.ess
+plugin.messaging.username = ****
+plugin.messaging.password = ******
+
+[finisher]
+send_messaging = true
+plugin.messaging = ess.daemons.common.messaging_sender.MessagingSender
+plugin.messaging.brokers = atlas-test-mb.cern.ch
+plugin.messaging.port = 61023
+plugin.messaging.broker_timeout = 10
+plugin.messaging.destination = /queue/atlas.ess
+plugin.messaging.username = *****
+plugin.messaging.password = *****
