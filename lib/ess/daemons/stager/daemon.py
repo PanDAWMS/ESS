@@ -10,6 +10,7 @@
 
 
 import datetime
+import json
 import time
 import traceback
 import Queue
@@ -124,6 +125,7 @@ class Stager(BaseDaemon):
 
         if self.send_messaging:
             for msg in messages:
+                self.logger.info("Sending a message to message broker: %s" % json.dumps(msg))
                 self.messaging_queue.put(msg)
 
     def run(self):

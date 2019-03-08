@@ -10,6 +10,7 @@
 
 
 import datetime
+import json
 import time
 import traceback
 
@@ -101,6 +102,7 @@ class Finisher(BaseDaemon):
                                        coll_id=req.processing_meta['coll_id'])
 
                     req.status = RequestStatus.AVAILABLE
+                    self.logger.info("Updating request %s to status %s" % (req.request_id, req.status))
                     update_request(req.request_id, {'status': req.status})
 
                     if self.send_messaging:
@@ -109,6 +111,7 @@ class Finisher(BaseDaemon):
                                            'name': req.name,
                                            'metadata': req.request_metadata},
                                'created_at': date_to_str(datetime.datetime.utcnow())}
+                        self.logger.info("Sending a message to message broker: %s" % json.dumps(msg))
                         self.messaging_queue.put(msg)
                 else:
                     self.logger.info('Not all files are available for request(%s): %s' % (req.request_id, items))
@@ -133,6 +136,15 @@ class Finisher(BaseDaemon):
                     req.status = RequestStatus.AVAILABLE
                     self.logger.info("Updating request %s to status %s" % (req.request_id, req.status))
                     update_request(req.request_id, {'status': req.status})
+
+                    if self.send_messaging:
+                        msg = {'event_type': 'REQUEST_DONE',
+                               'payload': {'scope': req.scope,
+                                           'name': req.name,
+                                           'metadata': req.request_meta},
+                               'created_at': date_to_str(datetime.datetime.utcnow())}
+                        self.logger.info("Sending a message to message broker: %s" % json.dumps(msg))
+                        self.messaging_queue.put(msg)
                 else:
                     self.logger.info('Not all partial files are available for request(%s): %s' % (req.request_id, items))
 
