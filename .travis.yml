@@ -5,6 +5,7 @@ python:
 install:
   - pip install 'unittest2'
   - pip install "flake8${FLAKE8_VERSION}"
+  - pip install 'flake8-blind-except'
   - pip install "argparse==1.2.1"
   - pip install "logging==0.4.9.6"
   - pip install "requests==2.0.1"
