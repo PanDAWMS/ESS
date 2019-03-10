@@ -6,7 +6,7 @@
 # - Wen Guan, <wen.guan@cern.ch>, 2019
 
 [common]
-#logdir = /var/log/ess
+logdir = /var/log/ess
 loglevel = DEBUG
 
 
