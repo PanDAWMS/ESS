@@ -15,20 +15,35 @@ ESS deployment architecture
 
 ESS internal architecture
 - Database layer
+
 ...Central Oracle at CERN to bookkeeps all information.
+
 - ORM(Object-Relational Mapping) layer
+
 ...Map database items to python objects.
+
 - Core layer
+
 ...Providing basic access to ORM layer.
+
 - Rest service
+
 ...Interface for Edge to heartbeat
+
 ...Interface for Panda to request to pre-cache files
+
 ...Interface for pilot to get event-level file info of cached files
+
 - Daemons
+
 ...ResourceManager: manage the cache space
+
 ...Broker and assigner: broker and assign requests to different Edge services.
+
 ...PreCacher: Precache files from ddm
+
 ...Splitter: Split files to fine-grained level
+
 ...Notifier: Notify Panda that the request is ready
 
 ![Here is the ESS internal architecture](https://github.com/PanDAWMS/ESS/blob/master/doc/design/images/ESS_architecture.png)
