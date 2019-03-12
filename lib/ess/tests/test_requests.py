@@ -21,13 +21,15 @@ from nose.tools import assert_equal, assert_raises
 
 from ess.client.client import Client
 from ess.common import exceptions
-from ess.common.utils import check_rest_host, get_rest_host
+from ess.common.utils import check_rest_host, get_rest_host, check_database, check_user_proxy, has_config
 from ess.core.requests import add_request, get_request, update_request, delete_request
 from ess.orm.types import GUID
 
 
 class TestRequest(unittest.TestCase):
 
+    @unittest.skipIf(not has_config(), "No config file")
+    @unittest.skipIf(not check_database(), "Database is not defined")
     def test_create_and_check_for_request_core(self):
         """ Request (CORE): Test the creation, query, and deletion of a Request """
 
@@ -81,6 +83,8 @@ class TestRequest(unittest.TestCase):
         with assert_raises(exceptions.NoObject):
             get_request(request_id=request_id)
 
+    @unittest.skipIf(not has_config(), "No config file")
+    @unittest.skipIf(not check_user_proxy(), "No user proxy to access REST")
     @unittest.skipIf(not check_rest_host(), "REST host is not defined")
     def test_create_and_check_for_request_rest(self):
         """ Request (REST): Test the creation, query, and deletion of a Request """

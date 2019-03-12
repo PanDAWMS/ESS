@@ -19,13 +19,15 @@ from nose.tools import assert_equal, assert_raises, assert_true
 
 from ess.client.client import Client
 from ess.common import exceptions
-from ess.common.utils import check_rest_host, get_rest_host
+from ess.common.utils import check_rest_host, get_rest_host, check_database, check_user_proxy, has_config
 from ess.core.edges import register_edge, get_edge, get_edge_id, update_edge, delete_edge, get_edges
 from ess.core.utils import render_json
 
 
 class TestEdge(unittest.TestCase):
 
+    @unittest.skipIf(not has_config(), "No config file")
+    @unittest.skipIf(not check_database(), "Database is not defined")
     def test_create_and_check_for_edge_core(self):
         """ Edge (CORE): Test the creation, query, and deletion of a Edge """
         edge_name = 'test_edge_%s' % str(uuid())
@@ -89,6 +91,8 @@ class TestEdge(unittest.TestCase):
         with assert_raises(exceptions.NoObject):
             get_edge(edge_name)
 
+    @unittest.skipIf(not has_config(), "No config file")
+    @unittest.skipIf(not check_user_proxy(), "No user proxy to access REST")
     @unittest.skipIf(not check_rest_host(), "REST host is not defined")
     def test_create_and_check_for_edge_rest(self):
         """ Edge (REST): Test the creation, query, and deletion of a Edge """

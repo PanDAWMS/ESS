@@ -20,6 +20,7 @@ from uuid import uuid4 as uuid
 from nose.tools import assert_equal, assert_raises
 
 from ess.common import exceptions
+from ess.common.utils import check_database, has_config
 from ess.core.edges import register_edge, delete_edge
 from ess.core.catalog import (add_collection, get_collection, update_collection, delete_collection,
                               add_content, update_content, get_content, delete_content,
@@ -29,6 +30,8 @@ from ess.core.catalog import (add_collection, get_collection, update_collection,
 
 class TestCatalogCore(unittest.TestCase):
 
+    @unittest.skipIf(not has_config(), "No config file")
+    @unittest.skipIf(not check_database(), "Database is not defined")
     def test_create_and_check_for_collection(self):
         """ Catalog (CORE): Test the creation, query, and deletion of a Collection """
 
@@ -95,6 +98,8 @@ class TestCatalogCore(unittest.TestCase):
 
         delete_edge(edge_name)
 
+    @unittest.skipIf(not has_config(), "No config file")
+    @unittest.skipIf(not check_database(), "Database is not defined")
     def test_create_and_check_for_collection_replicas(self):
         """ Catalog (CORE): Test the creation, query, and deletion of a Collection replicas"""
 
@@ -179,6 +184,8 @@ class TestCatalogCore(unittest.TestCase):
         delete_edge(edge_name)
         delete_collection(scope=properties_coll['scope'], name=properties_coll['name'], coll_id=collection_id)
 
+    @unittest.skipIf(not has_config(), "No config file")
+    @unittest.skipIf(not check_database(), "Database is not defined")
     def test_create_and_check_for_content(self):
         """ Catalog (CORE): Test the creation, query, and deletion of a Content """
         edge_name = 'test_rse_%s' % str(uuid())

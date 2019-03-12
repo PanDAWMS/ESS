@@ -160,7 +160,7 @@ class Edge(BASE, ModelBase):
 class Collection(BASE, ModelBase):
     """Represents collections of files"""
     __tablename__ = 'ess_coll'
-    coll_id = Column(BigInteger, Sequence('ESS_COLL_ID_SEQ'), nullable=False, unique=True, autoincrement=True)
+    coll_id = Column(BigInteger().with_variant(Integer, "sqlite"), Sequence('ESS_COLL_ID_SEQ'), nullable=False, unique=True, autoincrement=True)
     scope = Column(String(SCOPE_LENGTH))
     name = Column(String(NAME_LENGTH))
     collection_type = Column(CollectionType.db_type(name='ESS_COLL_TYPE'), default=CollectionType.DATASET)
@@ -172,7 +172,7 @@ class Collection(BASE, ModelBase):
 
     _table_args = (PrimaryKeyConstraint('coll_id', name='ESS_COLL_PK'),
                    # PrimaryKeyConstraint('scope', 'name', 'coll_id', name='ESS_COLL_PK'),
-                   CheckConstraint('status IS NOT NULL', name='ESS_COLL_GLOBAL_STATUS_NN'),
+                   CheckConstraint('global_status IS NOT NULL', name='ESS_COLL_GLOBAL_STATUS_NN'),
                    UniqueConstraint('scope', 'name', name='ESS_COLL_UQ'),
                    Index('ESS_COLL_SCOPE_NAEM_IDX', 'scope', 'name'),
                    Index('ESS_COLL_IDX', 'coll_id'))
@@ -198,7 +198,7 @@ class CollectionReplicas(BASE, ModelBase):
 class CollectionContent(BASE, ModelBase):
     """Represents files"""
     __tablename__ = 'ess_coll_content'
-    content_id = Column(BigInteger, Sequence('ESS_CONTENT_ID_SEQ'))
+    content_id = Column(BigInteger().with_variant(Integer, "sqlite"), Sequence('ESS_CONTENT_ID_SEQ'))
     coll_id = Column(BigInteger)
     scope = Column(String(SCOPE_LENGTH))
     name = Column(String(NAME_LENGTH))
@@ -233,7 +233,7 @@ class CollectionContent(BASE, ModelBase):
 class Request(BASE, ModelBase):
     """Represents a pre-cache request from other service"""
     __tablename__ = 'ess_requests'
-    request_id = Column(BigInteger, Sequence('ESS_REQUEST_ID_SEQ'))
+    request_id = Column(BigInteger().with_variant(Integer, "sqlite"), Sequence('ESS_REQUEST_ID_SEQ'), primary_key=True)
     scope = Column(String(SCOPE_LENGTH))
     name = Column(String(NAME_LENGTH))
     data_type = Column(DataType.db_type(name='ESS_REQUESTS_DATA_TYPE'), default=DataType.DATASET)

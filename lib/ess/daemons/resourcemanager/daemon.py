@@ -100,7 +100,7 @@ class ResourceManager(BaseDaemon):
                 self.logger.info("Updating edge %s with parameters: %s" % (self.get_resouce_name(), parameters))
                 update_edge(edge_name=self.get_resouce_name(), parameters=parameters)
             except NoObject as error:
-                self.logger.info("Edge %s doesn't exist, will register it: %s" % (self.get_resouce_name(), error))
+                self.logger.info("Edge %s doesn't exist(%s), will register it" % (self.get_resouce_name(), error))
                 register_edge(self.get_resouce_name(), edge_type=self.edge_type, status=EdgeStatus.ACTIVE,
                               is_independent=self.is_independent, continent=self.continent, country_name=self.country_name,
                               region_code=self.region_code, city=self.city, longitude=self.longitude, latitude=self.latitude,

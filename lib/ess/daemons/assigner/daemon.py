@@ -9,9 +9,13 @@
 # - Wen Guan, <wen.guan@cern.ch>, 2019
 
 
+from ess.client.client import Client
 from ess.common.constants import Sections
+from ess.common.exceptions import DuplicatedObject, NoObject, ESSException
 from ess.common.utils import setup_logging
-from ess.core.requests import get_requests, update_request
+from ess.core.catalog import add_collection
+from ess.core.edges import get_edge_id
+from ess.core.requests import add_request, get_requests, update_request
 from ess.daemons.common.basedaemon import BaseDaemon
 from ess.orm.constants import RequestStatus
 
@@ -31,6 +35,11 @@ class Assigner(BaseDaemon):
         self.setup_logger()
 
         self.resource_name = self.get_resouce_name()
+        head_service = self.get_head_service()
+        if head_service:
+            self.head_client = Client(head_service)
+        else:
+            self.head_client = None
 
     def assign_local_requests(self):
         reqs = get_requests(edge_name=self.resource_name, status=RequestStatus.ASSIGNING)
@@ -39,7 +48,52 @@ class Assigner(BaseDaemon):
             update_request(req.request_id, {'status': req.status})
 
     def assign_remote_requests(self):
-        pass
+        if not self.head_client:
+            return
+
+        reqs = []
+        try:
+            reqs = self.head_client.get_requests(edge_name=self.resource_name, status=str(RequestStatus.ASSIGNING))
+        except NoObject:
+            pass
+        except ESSException as error:
+            self.logger.info("Caught exception when get requests from the head service: %s" % str(error))
+
+        for req in reqs:
+            coll = self.head_client.get_collection(req.scope, req.name)
+            collection = {'scope': coll.scope,
+                          'name': coll.name,
+                          'collection_type': coll.collection_type,
+                          'coll_size': coll.coll_size,
+                          'global_status': coll.global_status,
+                          'total_files': coll.total_files,
+                          'num_replicas': coll.num_replicas,
+                          'coll_metadata': coll.coll_metadata}
+            try:
+                add_collection(**collection)
+            except DuplicatedObject as error:
+                self.logger.info("Collection is already registered: %s, %s" % (collection, error))
+
+            req.status = RequestStatus.ASSIGNED
+            processing_meta = req.processing_meta
+            processing_meta['original_request_id'] = req.request_id
+            request = {'scope': req.scope,
+                       'name': req.name,
+                       'data_type': req.data_type,
+                       'granularity_type': req.granularity_type,
+                       'granularity_level': req.granularity_level,
+                       'priority': req.priority,
+                       'edge_id': get_edge_id(self.resource_name),
+                       'status': req.status,
+                       'request_meta': req.request_meta,
+                       'processing_meta': processing_meta,
+                       'errors': req.errors}
+            try:
+                add_request(**request)
+            except DuplicatedObject as error:
+                self.logger.info("Request is already registered: %s, %s" % (request, error))
+
+            self.head_client.update_request(req.request_id, status=str(req.status))
 
     def get_tasks(self):
         """

@@ -6,13 +6,13 @@
 # - Wen Guan, <wen.guan@cern.ch>, 2019
 
 [common]
-logdir = /var/log/ess
+#logdir = /var/log/ess
 loglevel = DEBUG
 
 
 [database]
-default = mysql://ess:ess@localhost/ess
-#default = sqlite:////tmp/ess.db
+#default = mysql://ess:ess@localhost/ess
+default = sqlite:////tmp/ess.db
 #default = oracle://_____________:___________@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=_________)(PORT=______))(ADDRESS=(PROTOCOL=TCP)(HOST=_________)(PORT=_____))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=__________)))
 #default = oracle://_____________:___________@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=______))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=_____________)))
 
@@ -23,8 +23,8 @@ pool_recycle=3600
 echo=0
 pool_reset_on_return=rollback
 
-[rest]
-host = https://aipanda182.cern.ch:8443
+#[rest]
+#host = https://aipanda182.cern.ch:8443
 
 [main]
 # name = ESS_edge_aipanda182

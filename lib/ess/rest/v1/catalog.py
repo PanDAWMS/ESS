@@ -82,14 +82,14 @@ class CatalogContent(ESSController):
             min_id = params['min_id']
             try:
                 min_id = int(min_id)
-            except:
+            except:  # noqa: B901
                 min_id = None
 
         if 'max_id' in params:
             max_id = params['max_id']
             try:
                 max_id = int(max_id)
-            except:
+            except:  # noqa: B901
                 max_id = None
 
         if 'status' in params:

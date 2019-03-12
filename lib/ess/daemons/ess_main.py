@@ -125,6 +125,7 @@ def stop(signum=None, frame=None):
         [thr.join(timeout=3.14) for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
         RUNNING_DAEMONS = [thr for thr in RUNNING_DAEMONS if thr and thr.is_alive()]
 
+
 if __name__ == '__main__':
 
     signal.signal(signal.SIGTERM, stop)
