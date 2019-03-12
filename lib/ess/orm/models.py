@@ -224,10 +224,10 @@ class CollectionContent(BASE, ModelBase):
                    CheckConstraint('status IS NOT NULL', name='ESS_CONTENT_STATUS_NN'),
                    UniqueConstraint('scope', 'name', 'coll_id', 'content_type', 'min_id', 'max_id', 'edge_id', name='ESS_CONTENT_UQ'),
                    Index('ESS_CONTENT_SCOPE_NAME_IDX', 'scope', 'name', 'edge_id', 'status'),
-                   Index('ESS_CONTENT_SCOPE_NAME_MINMAX_IDX', 'scope', 'name', 'content_type', 'min_id', 'max_id', 'edge_id', 'status'),
+                   Index('ESS_CONTENT_SCOPE_NAME_MM_IDX', 'scope', 'name', 'content_type', 'min_id', 'max_id', 'edge_id', 'status'),
                    Index('ESS_CONTENT_COLLECTION_ID_IDX', 'coll_id', 'status'),
                    Index('ESS_CONTENT_EDGE_ID_IDX', 'edge_id', 'status'),
-                   Index('ESS_CONTENT_STATUS_PRIORITY_IDX', 'status', 'priority'))
+                   Index('ESS_CONTENT_STATUS_PRIO_IDX', 'status', 'priority'))
 
 
 class Request(BASE, ModelBase):
@@ -249,7 +249,7 @@ class Request(BASE, ModelBase):
                    ForeignKeyConstraint(['edge_id'], ['ess_edges.edge_id'], name='ESS_REQUESTS_EDGE_ID_FK'),
                    CheckConstraint('status IS NOT NULL', name='ESS_REQ_STATUS_ID_NN'),
                    Index('ESS_REQUESTS_SCOPE_NAME_IDX', 'scope', 'name', 'data_type', 'request_id'),
-                   Index('ESS_REQUESTS_STATUS_PRIORITY_IDX', 'status', 'priority', 'request_id'))
+                   Index('ESS_REQUESTS_STATUS_PRIO_IDX', 'status', 'priority', 'request_id'))
 
 
 def register_models(engine):

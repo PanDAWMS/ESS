@@ -23,7 +23,7 @@ from ess.common.config import config_has_section, config_has_option, config_list
 from ess.common.utils import setup_logging
 
 
-setup_logging(__name__)
+setup_logging('ess.log')
 
 
 DAEMONS = {
