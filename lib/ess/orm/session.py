@@ -36,6 +36,7 @@ DATABASE_SECTION = 'database'
 
 BASE = declarative_base()
 
+DEFAULT_SCHEMA_NAME = None
 if config_has_option(DATABASE_SECTION, 'schema'):
     DEFAULT_SCHEMA_NAME = config_get(DATABASE_SECTION, 'schema')
     if DEFAULT_SCHEMA_NAME:
