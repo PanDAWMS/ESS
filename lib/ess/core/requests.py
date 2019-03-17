@@ -67,7 +67,7 @@ def add_request(scope, name, data_type=DataType.DATASET, granularity_type=Granul
     except IntegrityError as error:
         raise exceptions.DuplicatedObject('Request %s:%s already exists!: %s' % (scope, name, error))
     except DatabaseError as error:
-        raise exceptions.DatabaseException(error.args)
+        raise exceptions.DatabaseException(error)
 
     return new_request.request_id
 
@@ -106,7 +106,7 @@ def update_request(request_id, parameters, session=None):
     try:
         request.update(parameters)
     except DatabaseError as error:
-        raise exceptions.DatabaseException(error.args)
+        raise exceptions.DatabaseException(error)
 
     return request.request_id
 

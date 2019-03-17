@@ -67,10 +67,10 @@ def register_edge(edge_name, edge_type=EdgeType.EDGE, status=EdgeStatus.ACTIVE, 
 
     try:
         new_edge.save(session=session)
-    except IntegrityError:
-        raise exceptions.DuplicatedObject('Edge %s already exists!' % edge_name)
+    except IntegrityError as error:
+        raise exceptions.DuplicatedObject('Edge %s already exists!: %s' % (edge_name, error))
     except DatabaseError as error:
-        raise exceptions.DatabaseException(error.args)
+        raise exceptions.DatabaseException(error)
 
     return new_edge.edge_id
 
@@ -99,13 +99,13 @@ def update_edge(edge_name, parameters, session=None):
             parameters['status'] = EdgeStatus.from_sym(str(parameters['status']))
 
         edge = session.query(models.Edge).filter_by(edge_name=edge_name).one()
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Edge %s cannot be found' % edge_name)
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Edge %s cannot be found: %s' % (edge_name, error))
 
     try:
         edge.update(parameters)
     except DatabaseError as error:
-        raise exceptions.DatabaseException(error.args)
+        raise exceptions.DatabaseException(error)
 
     return edge.edge_id
 
@@ -132,8 +132,8 @@ def get_edge(edge_name, edge_id=None, session=None):
 
         edge['edge_type'] = edge.edge_type
         return edge
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Edge %s cannot be found' % edge_name)
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Edge %s cannot be found: %s' % (edge_name, error))
 
 
 @read_session
@@ -151,8 +151,8 @@ def get_edge_id(edge_name, session=None):
 
     try:
         return session.query(models.Edge.edge_id).filter_by(edge_name=edge_name).one()[0]
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Edge %s cannot be found' % edge_name)
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Edge %s cannot be found: %s' % (edge_name, error))
 
 
 @transactional_session
@@ -168,8 +168,8 @@ def delete_edge(edge_name, session=None):
 
     try:
         session.query(models.Edge).filter_by(edge_name=edge_name).delete()
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Edge %s cannot be found' % edge_name)
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Edge %s cannot be found: %s' % (edge_name, error))
 
 
 @read_session
@@ -196,5 +196,5 @@ def get_edges(status=None, session=None):
         for edge in edges:
             edge['edge_type'] = edge.edge_type
         return edges
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Cannot find edges with status: %s' % status)
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Cannot find edges with status: %s, %s' % (status, error))
