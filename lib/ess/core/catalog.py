@@ -59,10 +59,10 @@ def add_collection(scope, name, collection_type=CollectionType.DATASET, coll_siz
 
     try:
         new_collection.save(session=session)
-    except IntegrityError:
-        raise exceptions.DuplicatedObject('Collection %s:%s already exists!' % (scope, name))
+    except IntegrityError as error:
+        raise exceptions.DuplicatedObject('Collection %s:%s already exists: %s' % (scope, name, error))
     except DatabaseError as error:
-        raise exceptions.DatabaseException(error.args)
+        raise exceptions.DatabaseException(error)
 
     return new_collection.coll_id
 
@@ -88,8 +88,8 @@ def update_collection(scope, name, parameters=None, coll_id=None, session=None):
             collection = session.query(models.Collection).filter_by(coll_id=coll_id).one()
         else:
             collection = session.query(models.Collection).filter_by(scope=scope, name=name).one()
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Collection %s:%s cannot be found' % (scope, name))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Collection %s:%s cannot be found: %s' % (scope, name, error))
 
     try:
         if 'collection_type' in parameters and \
@@ -102,7 +102,7 @@ def update_collection(scope, name, parameters=None, coll_id=None, session=None):
 
         collection.update(parameters)
     except DatabaseError as error:
-        raise exceptions.DatabaseException(error.args)
+        raise exceptions.DatabaseException(error)
 
     return collection.coll_id
 
@@ -131,8 +131,8 @@ def get_collection(scope, name, coll_id=None, session=None):
         collection['collection_type'] = collection.collection_type
         collection['global_status'] = collection.global_status
         return collection
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Collection %s:%s cannot be found' % (scope, name))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Collection %s:%s cannot be found: %s' % (scope, name, error))
 
 
 @read_session
@@ -153,8 +153,8 @@ def get_collection_id(scope, name, session=None):
         collection_id = session.query(models.Collection.coll_id).filter_by(scope=scope, name=name).one()[0]
 
         return collection_id
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Collection %s:%s cannot be found' % (scope, name))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Collection %s:%s cannot be found: %s' % (scope, name, error))
 
 
 @transactional_session
@@ -175,8 +175,8 @@ def delete_collection(scope, name, coll_id=None, session=None):
             session.query(models.Collection).filter_by(coll_id=coll_id).delete()
         else:
             session.query(models.Collection).filter_by(scope=scope, name=name).delete()
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Collection %s:%s cannot be found' % (scope, name))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Collection %s:%s cannot be found: %s' % (scope, name, error))
 
 
 @transactional_session
@@ -251,8 +251,8 @@ def get_collection_replicas(scope, name, edge_name, coll_id=None, edge_id=None, 
 
         collection_replicas['status'] = collection_replicas.status
         return collection_replicas
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Collection replicas %s:%s(at %s) cannot be found' % (scope, name, edge_name))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Collection replicas %s:%s(at %s) cannot be found: %s' % (scope, name, edge_name, error))
 
 
 @transactional_session
@@ -274,8 +274,8 @@ def update_collection_replicas(scope, name, edge_name, coll_id=None, edge_id=Non
     """
     try:
         collection_replicas = get_collection_replicas(scope, name, edge_name, coll_id=coll_id, edge_id=edge_id, session=session)
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Collection %s:%s cannot be found' % (scope, name))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Collection %s:%s cannot be found: %s' % (scope, name, error))
 
     try:
         if 'status' in parameters and \
@@ -284,7 +284,7 @@ def update_collection_replicas(scope, name, edge_name, coll_id=None, edge_id=Non
 
         collection_replicas.update(parameters)
     except DatabaseError as error:
-        raise exceptions.DatabaseException(error.args)
+        raise exceptions.DatabaseException(error)
 
 
 @transactional_session
@@ -309,8 +309,8 @@ def delete_collection_replicas(scope, name, edge_name, coll_id=None, edge_id=Non
             edge_id = get_edge_id(edge_name=edge_name, session=session)
 
         session.query(models.CollectionReplicas).filter_by(coll_id=coll_id, edge_id=edge_id).delete()
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Collection %s:%s(at %s) cannot be found' % (scope, name, edge_name))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Collection %s:%s(at %s) cannot be found: %s' % (scope, name, edge_name, error))
 
 
 @transactional_session
@@ -358,10 +358,10 @@ def add_content(scope, name, min_id=None, max_id=None, coll_id=None, content_typ
 
     try:
         new_content.save(session=session)
-    except IntegrityError:
-        raise exceptions.DuplicatedObject('Content %s:%s[%s:%s](at edge %s) already exists!' % (scope, name, min_id, max_id, edge_name))
+    except IntegrityError as error:
+        raise exceptions.DuplicatedObject('Content %s:%s[%s:%s](at edge %s) already exists: %s' % (scope, name, min_id, max_id, edge_name, error))
     except DatabaseError as error:
-        raise exceptions.DatabaseException(error.args)
+        raise exceptions.DatabaseException(error)
 
     return new_content.content_id
 
@@ -427,7 +427,7 @@ def update_content(scope, name, min_id=None, max_id=None, edge_name=None, edge_i
 
         content.update(parameters)
     except DatabaseError as error:
-        raise exceptions.DatabaseException(error.args)
+        raise exceptions.DatabaseException(error)
 
     return content.content_id
 
@@ -453,7 +453,7 @@ def update_contents(files, session=None):
                            content_id=file.content_id,
                            parameters=parameters, session=session)
     except DatabaseError as error:
-        raise exceptions.DatabaseException(error.args)
+        raise exceptions.DatabaseException(error)
 
 
 @transactional_session
@@ -479,7 +479,7 @@ def update_contents_by_id(files, session=None):
             session.query(models.CollectionContent).filter_by(content_id=id).update(parameters)
 
     except DatabaseError as error:
-        raise exceptions.DatabaseException(error.args)
+        raise exceptions.DatabaseException(error)
 
 
 @read_session
@@ -517,8 +517,8 @@ def get_content(scope, name, min_id=None, max_id=None, edge_name=None, edge_id=N
         content['content_type'] = content.content_type
         content['status'] = content.status
         return content
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Content %s:%s[%s:%s](at edge %s) cannot be found' % (scope, name, min_id, max_id, edge_id))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Content %s:%s[%s:%s](at edge %s) cannot be found: %s' % (scope, name, min_id, max_id, edge_id, error))
 
 
 @read_session
@@ -566,8 +566,8 @@ def get_content_best_match(scope, name, min_id=None, max_id=None, edge_name=None
         content['content_type'] = content.content_type
         content['status'] = content.status
         return content
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Content %s:%s[%s:%s](at edge %s) cannot be found' % (scope, name, min_id, max_id, edge_id))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Content %s:%s[%s:%s](at edge %s) cannot be found: %s' % (scope, name, min_id, max_id, edge_id, error))
 
 
 @read_session
@@ -613,8 +613,8 @@ def get_contents_by_edge(edge_name, edge_id=None, status=None, coll_id=None, con
             content['content_type'] = content.content_type
             content['status'] = content.status
         return contents
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('No contents at edge %s with status %s' % (edge_name, status))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('No contents at edge %s with status %s: %s' % (edge_name, status, error))
 
 
 @read_session
@@ -657,8 +657,8 @@ def get_contents_statistics(edge_name, edge_id=None, coll_id=None, status=None, 
         statistics = query.all()
 
         return statistics
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Failed to get statistics for edge %s and collection %s' % (edge_id, coll_id))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Failed to get statistics for edge %s and collection %s: %s' % (edge_id, coll_id, error))
 
 
 @transactional_session
@@ -683,5 +683,5 @@ def delete_content(scope, name, edge_name=None, edge_id=None, content_id=None, s
                 edge_id = get_edge_id(edge_name=edge_name, session=session)
 
             session.query(models.CollectionContent).filter_by(scope=scope, name=name, edge_id=edge_id).delete()
-    except sqlalchemy.orm.exc.NoResultFound:
-        raise exceptions.NoObject('Contents %s:%s(at edge %s) cannot be found' % (scope, name, edge_id))
+    except sqlalchemy.orm.exc.NoResultFound as error:
+        raise exceptions.NoObject('Contents %s:%s(at edge %s) cannot be found: %s' % (scope, name, edge_id, error))

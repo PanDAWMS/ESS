@@ -11,3 +11,4 @@ web.py==0.39				# web service
 futures==3.2.0				# multiple process/threads
 #rucio-clients==1.19.1			# Rucio clients
 stomp.py==4.1.21			# Messaging broker client
+#cx-Oracle==7.1.2			# Oralce client
