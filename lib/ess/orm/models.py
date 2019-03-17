@@ -24,7 +24,7 @@ from sqlalchemy.schema import CheckConstraint, ForeignKeyConstraint, Index, Prim
 from ess.common.utils import date_to_str
 from ess.orm.enum import EnumSymbol
 from ess.orm.types import JSON
-from ess.orm.session import BASE
+from ess.orm.session import BASE, DEFAULT_SCHEMA_NAME
 from ess.orm.constants import (SCOPE_LENGTH, NAME_LENGTH,
                                EdgeType, EdgeStatus, CollectionType, CollectionStatus, CollectionReplicasStatus,
                                ContentType, ContentStatus, DataType, GranularityType, RequestStatus)
@@ -135,7 +135,7 @@ class ModelBase(object):
 class Edge(BASE, ModelBase):
     """Represents an ESS EDGE"""
     __tablename__ = 'ess_edges'
-    edge_id = Column(Integer, Sequence('ESS_EDGE_ID_SEQ'))
+    edge_id = Column(Integer, Sequence('ESS_EDGE_ID_SEQ', schema=DEFAULT_SCHEMA_NAME))
     edge_name = Column(String(30))
     edge_type = Column(EdgeType.db_type(name='ESS_EDGES_TYPE_CHK'), default=EdgeType.EDGE)
     status = Column(EdgeStatus.db_type(name='ESS_EDGES_STATUS_CHK'), default=EdgeStatus.ACTIVE)
@@ -160,7 +160,7 @@ class Edge(BASE, ModelBase):
 class Collection(BASE, ModelBase):
     """Represents collections of files"""
     __tablename__ = 'ess_coll'
-    coll_id = Column(BigInteger().with_variant(Integer, "sqlite"), Sequence('ESS_COLL_ID_SEQ'), nullable=False, unique=True, autoincrement=True)
+    coll_id = Column(BigInteger().with_variant(Integer, "sqlite"), Sequence('ESS_COLL_ID_SEQ', schema=DEFAULT_SCHEMA_NAME))
     scope = Column(String(SCOPE_LENGTH))
     name = Column(String(NAME_LENGTH))
     collection_type = Column(CollectionType.db_type(name='ESS_COLL_TYPE'), default=CollectionType.DATASET)
@@ -198,7 +198,7 @@ class CollectionReplicas(BASE, ModelBase):
 class CollectionContent(BASE, ModelBase):
     """Represents files"""
     __tablename__ = 'ess_coll_content'
-    content_id = Column(BigInteger().with_variant(Integer, "sqlite"), Sequence('ESS_CONTENT_ID_SEQ'))
+    content_id = Column(BigInteger().with_variant(Integer, "sqlite"), Sequence('ESS_COLL_CONTENT_ID_SEQ', schema=DEFAULT_SCHEMA_NAME))
     coll_id = Column(BigInteger)
     scope = Column(String(SCOPE_LENGTH))
     name = Column(String(NAME_LENGTH))
@@ -233,7 +233,7 @@ class CollectionContent(BASE, ModelBase):
 class Request(BASE, ModelBase):
     """Represents a pre-cache request from other service"""
     __tablename__ = 'ess_requests'
-    request_id = Column(BigInteger().with_variant(Integer, "sqlite"), Sequence('ESS_REQUEST_ID_SEQ'), primary_key=True)
+    request_id = Column(BigInteger().with_variant(Integer, "sqlite"), Sequence('ESS_REQUEST_ID_SEQ', schema=DEFAULT_SCHEMA_NAME), primary_key=True)
     scope = Column(String(SCOPE_LENGTH))
     name = Column(String(NAME_LENGTH))
     data_type = Column(DataType.db_type(name='ESS_REQUESTS_DATA_TYPE'), default=DataType.DATASET)
