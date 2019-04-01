@@ -85,6 +85,7 @@ class ModelBase(object):
         """dict.update() behaviour."""
         for k, v in values.iteritems():
             self[k] = v
+        self["updated_at"] = datetime.datetime.utcnow()
         if session and flush:
             session.flush()
 

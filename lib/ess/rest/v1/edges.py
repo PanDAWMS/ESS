@@ -107,7 +107,7 @@ class Edge(ESSController):
         """
         json_data = data()
         args = ['edge_type', 'status', 'is_independent', 'continent', 'country_name', 'region_code', 'city',
-                'longitude', 'latitude', 'total_space', 'used_space', 'num_files']
+                'longitude', 'latitude', 'total_space', 'used_space', 'num_files', 'updated_at']
 
         try:
             parameters = {}
