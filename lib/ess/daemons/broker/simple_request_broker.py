@@ -27,4 +27,11 @@ class SimpleRequestBroker(PluginBase):
         """
         Find an edge server to broker the request.
         """
-        return edges[0]
+        max_free_space = None
+        max_free_space_edge = None
+        for edge in edges:
+            free_space = edge.total_space - edge.used_space - edge.reserved_space
+            if max_free_space is None or free_space > max_free_space:
+                max_free_space = free_space
+                max_free_space_edge = edge
+        return max_free_space_edge
