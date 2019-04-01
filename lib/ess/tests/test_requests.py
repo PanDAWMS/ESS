@@ -23,7 +23,6 @@ from ess.client.client import Client
 from ess.common import exceptions
 from ess.common.utils import check_rest_host, get_rest_host, check_database, check_user_proxy, has_config
 from ess.core.requests import add_request, get_request, update_request, delete_request
-from ess.orm.types import GUID
 
 
 class TestRequest(unittest.TestCase):
