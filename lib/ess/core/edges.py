@@ -13,6 +13,7 @@
 operations related to Edges.
 """
 
+import datetime
 import sqlalchemy
 import sqlalchemy.orm
 
@@ -170,6 +171,23 @@ def delete_edge(edge_name, session=None):
         session.query(models.Edge).filter_by(edge_name=edge_name).delete()
     except sqlalchemy.orm.exc.NoResultFound as error:
         raise exceptions.NoObject('Edge %s cannot be found: %s' % (edge_name, error))
+
+
+@transactional_session
+def clean_old_edges(seconds, session=None):
+    """
+    Delete edges where are not updated for <seconds> seconds.
+
+    :param seconds: Number of seconds.
+    :param session: The database session in use.
+
+    :raises NoObject: If no edge is founded.
+    """
+
+    try:
+        session.query(models.Edge).filter(models.Edge.updated_at < datetime.datetime.utcnow() - datetime.timedelta(seconds=seconds)).update({'status': EdgeStatus.LOSTHEARTBEAT})
+    except Exception as error:
+        raise exceptions.DatabaseException('Failed to update old edges to LOSTHeARTBEAT: %s' % error)
 
 
 @read_session

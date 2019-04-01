@@ -193,21 +193,18 @@ def get_requests(status=None, edge_name=None, edge_id=None, session=None):
             if (isinstance(status, str) or isinstance(status, unicode)):
                 status = RequestStatus.from_sym(status)
 
-            if edge_id:
-                requests = session.query(models.Request).filter_by(status=status, edge_id=edge_id).all()
-            else:
-                requests = session.query(models.Request).filter_by(status=status).all()
-        else:
-            if edge_id:
-                requests = session.query(models.Request).filter_by(edge_id=edge_id).all()
-            else:
-                requests = session.query(models.Request).all()
+        query = session.query(models.Request)
+        if edge_id:
+            query = query.filter_by(edge_id=edge_id)
+        if status:
+            query = query.filter_by(status=status)
+        reqs = query.all()
 
-        for request in requests:
-            request['data_type'] = request.data_type
-            request['granularity_type'] = request.granularity_type
-            request['status'] = request.status
-        return requests
+        for req in reqs:
+            req['data_type'] = req.data_type
+            req['granularity_type'] = req.granularity_type
+            req['status'] = req.status
+        return reqs
     except sqlalchemy.orm.exc.NoResultFound as error:
         raise exceptions.NoObject('Cannot find request with status: %s, %s' % (status, error))
 

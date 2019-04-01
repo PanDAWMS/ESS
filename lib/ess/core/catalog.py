@@ -389,7 +389,18 @@ def add_contents(collection_scope, collection_name, edge_name, files, session=No
                         object_metadata=file['object_metadata'] if 'object_metadata' in file else None,
                         session=session)
         except exceptions.DuplicatedObject:
-            pass
+            session.rollback()
+            parameters = {'content_type': file['content_type'],
+                          'status': file['status'],
+                          'priority': file['priority']}
+            if 'pfn_size' in file:
+                parameters['pfn_size'] = file['pfn_size']
+            if 'pfn' in file:
+                parameters['pfn'] = file['pfn']
+            if 'object_metadata' in file:
+                parameters['object_metadata'] = file['object_metadata']
+            update_content(scope=file['scope'], name=file['name'], min_id=file['min_id'],
+                           max_id=file['max_id'], edge_id=edge_id, parameters=parameters, session=session)
 
 
 @transactional_session
