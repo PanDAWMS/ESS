@@ -128,7 +128,7 @@ class TestRequest(unittest.TestCase):
         assert_equal(str(request['status']), 'ERROR')
 
         with assert_raises(exceptions.NoObject):
-            client.get_request(request_id=GUID().generate_uuid())
+            client.get_request(request_id=99999999999)
 
         client.delete_request(request_id)
 
