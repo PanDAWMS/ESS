@@ -9,6 +9,10 @@
 # - Wen Guan, <wen.guan@cern.ch>, 2019
 
 
+# /data/atlpilo2/VOMSRenew.sh
+export X509_USER_PROXY=/tmp/x509up
+export RUCIO_ACCOUNT=atlpilo2
+
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
 source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
 localSetupPython
