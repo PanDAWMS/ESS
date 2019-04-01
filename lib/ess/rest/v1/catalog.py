@@ -23,9 +23,9 @@ from ess.orm.constants import ContentStatus
 
 
 URLS = (
-    'collection/(.*)/(.*)', 'CatalogCollection',
-    'content/(.*)/(.*)', 'CatalogContent',
-    'contents/(.*)/(.*)/(.*)', 'CatalogContents',
+    '/collection/(.*)/(.*)', 'CatalogCollection',
+    '/content/(.*)/(.*)', 'CatalogContent',
+    '/contents/(.*)/(.*)/(.*)', 'CatalogContents',
 )
 
 
@@ -159,7 +159,7 @@ class CatalogContents(ESSController):
         header('Content-Type', 'application/json')
 
         try:
-            json_data = data
+            json_data = data()
             files = json.loads(json_data)
             add_contents(collection_scope, collection_name, edge_name, files)
         except exceptions.DuplicatedObject as error:

@@ -98,14 +98,15 @@ class EdgeClient(BaseRestClient):
         r = self.get_request_response(url, type='DEL')
         return r
 
-    def list_edges(self):
+    def list_edges(self, **kwargs):
         """
         List edges.
 
         :raise exceptions if it's not successful.
         """
         path = self.EDGE_BASEURL
-        url = self.build_url(self.host, path=path + '/')
+        params = kwargs
+        url = self.build_url(self.host, path=path + '/', params=params)
 
         r = self.get_request_response(url, type='GET')
         return r

@@ -1,4 +1,4 @@
 # manage ess service
 check process ess-service with pidfile /tmp/ess.pid
-    start program = "/usr/bin/ess-service start" with timeout 600 seconds
+    start program = "/usr/bin/ess-service start" as uid atlpilo2 and gid zp with timeout 600 seconds
     stop program  = "/usr/bin/ess-service stop"

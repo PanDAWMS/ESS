@@ -15,7 +15,7 @@ from ess.client.client import Client
 properties = {
     'scope': 'mc16_13TeV',
     'name': 'mc16_13TeV.450525.MadGraphPythia8EvtGen_A14NNPDF23LO_X2000tohh_bbtautau_hadhad.merge.EVNT.e7244_e5984_tid16986378_00',
-    'data_type': 'FILE',
+    'data_type': 'DATASET',
     'granularity_type': 'PARTIAL',
     'granularity_level': 50,
     'priority': 99,
@@ -38,7 +38,7 @@ properties = {
 }
 """
 
-client = Client(host='https://aipanda182.cern.ch:8443')
+client = Client(host='https://aipanda180.cern.ch:8443')
 
 try:
     request_id = client.add_request(**properties)

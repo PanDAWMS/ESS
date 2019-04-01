@@ -60,7 +60,7 @@ class BaseRestClient(object):
         full_url = url
         if path is not None:
             full_url = '/'.join([full_url, path])
-        if params is not None:
+        if params:
             full_url += "?"
             if isinstance(params, str):
                 full_url += quote(params)
@@ -102,7 +102,10 @@ class BaseRestClient(object):
 
             if result is not None:
                 if result.status_code == HTTP_STATUS_CODE.OK:
-                    return json.loads(result.text)
+                    if result.text:
+                        return json.loads(result.text)
+                    else:
+                        return None
                 elif result.status_code == HTTP_STATUS_CODE.NotFound:
                     raise exceptions.NoObject("Not found object")
                 else:

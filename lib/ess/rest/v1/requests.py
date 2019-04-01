@@ -12,7 +12,7 @@
 import json
 from traceback import format_exc
 
-from web import application, data, header
+from web import application, data, header, input
 
 
 from ess.common import exceptions

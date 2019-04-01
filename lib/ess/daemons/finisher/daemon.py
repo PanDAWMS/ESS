@@ -58,7 +58,8 @@ class Finisher(BaseDaemon):
 
         contents = get_contents_by_edge(edge_name=edge_name,
                                         edge_id=edge_id,
-                                        coll_id=coll_id)
+                                        coll_id=coll_id,
+                                        status=ContentStatus.AVAILABLE)
 
         contents_list = []
         for content in contents:
@@ -101,6 +102,10 @@ class Finisher(BaseDaemon):
                                        coll_id=req.processing_meta['coll_id'])
 
                     req.status = RequestStatus.AVAILABLE
+                    if self.head_client and 'original_request_id' in req.processing_meta:
+                        self.logger.info("Updating request %s(original request: %s) to status %s to the head node" % (req.request_id, req.processing_meta['original_request_id'], req.status))
+                        self.head_client.update_request(req.processing_meta['original_request_id'], status=str(req.status))
+
                     self.logger.info("Updating request %s to status %s" % (req.request_id, req.status))
                     update_request(req.request_id, {'status': req.status})
 
@@ -132,6 +137,10 @@ class Finisher(BaseDaemon):
                                        coll_id=req.processing_meta['coll_id'])
 
                     req.status = RequestStatus.AVAILABLE
+                    if self.head_client and 'original_request_id' in req.processing_meta:
+                        self.logger.info("Updating request %s(original request: %s) to status %s to the head node" % (req.request_id, req.processing_meta['original_request_id'], req.status))
+                        self.head_client.update_request(req.processing_meta['original_request_id'], status=str(req.status))
+
                     self.logger.info("Updating request %s to status %s" % (req.request_id, req.status))
                     update_request(req.request_id, {'status': req.status})
 

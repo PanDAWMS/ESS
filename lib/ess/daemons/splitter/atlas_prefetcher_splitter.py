@@ -219,16 +219,18 @@ class AtlasPrefetcherSplitter(PluginBase, threading.Thread):
         with open(self.splitter_template, 'r') as f:
             template = f.read()
 
+        work_dir = os.path.join(self.log_dir, datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S"))
+        if not os.path.exists(work_dir):
+            os.makedirs(work_dir)
         process_name = name
         process_cmd = template.format(process_name=process_name, num_processes=self.num_threads,
-                                      output_prefix=self.output_prefix, work_dir=self.log_dir,
+                                      output_prefix=self.output_prefix, work_dir=work_dir,
                                       default_input=self.default_input)
 
         # self.logger.info("Starting ATLAS prefetcher %s with command %s" % (process_name, process_cmd))
 
-        today_str = datetime.date.today().strftime("%Y-%m-%d")
-        stdout = self.log_dir + '/' + process_name + '.stdout.' + today_str
-        stderr = self.log_dir + '/' + process_name + '.stderr.' + today_str
+        stdout = work_dir + '/' + process_name + '.stdout'
+        stderr = work_dir + '/' + process_name + '.stderr'
         stdout = open(stdout, 'a+')
         stderr = open(stderr, 'a+')
         process = AtlasPrefetcher(self.request_queue, self.output_queue, process_name, process_cmd, stdout, stderr, self.num_threads)

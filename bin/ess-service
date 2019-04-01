@@ -6,9 +6,9 @@
 
 CurrentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 RootDir="$( dirname "$CurrentDir" )"
-PROGRAM=${CurrentDir}/ess-main
+PROGRAM=${CurrentDir}/ess-daemon
 
-PROGRAM_BASENAME=ess_main
+PROGRAM_BASENAME=ess-daemon
 
 PIDFILE=/tmp/ess.pid
 LOCKFILE=/tmp/ess.lock
