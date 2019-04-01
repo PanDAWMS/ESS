@@ -70,7 +70,7 @@ class Stager(BaseDaemon):
     def is_stagers_alive(self):
         if 'stager' in self.plugins:
             try:
-                self.plugins['stager'].is_alive()
+                return self.plugins['stager'].is_alive()
             except Exception as error:
                 self.logger.error("Stager plugin throws an exception: %s, %s" % (error, traceback.format_exc()))
                 raise DaemonPluginError("Stager plugin throws an exception: %s" % (error))
