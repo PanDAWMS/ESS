@@ -14,6 +14,10 @@ Catalog Rest client to access ESS system.
 """
 
 import os
+try:
+    from urllib import quote_plus
+except ImportError:
+    from urllib.parse import quote_plus
 
 from ess.client.base import BaseRestClient
 
@@ -45,7 +49,7 @@ class CatalogClient(BaseRestClient):
         """
         path = self.CATALOG_BASEURL
 
-        url = self.build_url(self.host, path=os.path.join(path, 'collection/%s/%s' % (scope, name)))
+        url = self.build_url(self.host, path=os.path.join(path, 'collection/%s/%s' % (quote_plus(scope), quote_plus(name))))
 
         r = self.get_request_response(url, type='GET')
         return r
